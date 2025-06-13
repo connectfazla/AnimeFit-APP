@@ -1,10 +1,13 @@
 
 "use client";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, Dumbbell, LogIn, UserPlus } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, Dumbbell, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
+import { onAuthStateChanged, signOut as firebaseSignOutService, type FirebaseUser } from '@/lib/firebase/authService';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -22,8 +25,35 @@ const authNavItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  // In a more advanced setup, you'd get currentUser state here, possibly from a context
-  // For now, we'll show all nav items. Header will show conditional login/logout.
+  const router = useRouter();
+  const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const unsubscribe = onAuthStateChanged((user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await firebaseSignOutService();
+      toast({
+        title: 'Signed Out',
+        description: "You've successfully signed out.",
+      });
+      router.push('/login');
+    } catch (error: any) {
+      toast({
+        title: 'Sign Out Failed',
+        description: error.message || 'Could not sign out.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <Sidebar variant="sidebar" side="left" collapsible="icon">
@@ -53,24 +83,59 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuItem>
           ))}
-          {/* Static Auth Links - better to make these conditional based on auth state */}
+          
           <hr className="my-2 border-sidebar-border group-data-[collapsible=icon]:hidden" />
-           {authNavItems.map((item) => (
-            <SidebarMenuItem key={item.href} className="group-data-[collapsible=icon]:my-1">
-              <Link href={item.href}>
-                <SidebarMenuButton
-                  variant="ghost" // Or another appropriate variant
-                  size="default"
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label, side: 'right', align: 'center' }}
-                  className="justify-start"
-                >
-                  <item.icon className="h-5 w-5 mr-2" />
-                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+          
+          {mounted && currentUser ? (
+            <SidebarMenuItem className="group-data-[collapsible=icon]:my-1">
+              <SidebarMenuButton
+                variant="ghost"
+                size="default"
+                onClick={handleSignOut}
+                tooltip={{ children: "Logout", side: 'right', align: 'center' }}
+                className="justify-start"
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
+          ) : mounted && !currentUser ? (
+            authNavItems.map((item) => (
+              <SidebarMenuItem key={item.href} className="group-data-[collapsible=icon]:my-1">
+                <Link href={item.href}>
+                  <SidebarMenuButton
+                    variant="ghost"
+                    size="default"
+                    isActive={pathname === item.href}
+                    tooltip={{ children: item.label, side: 'right', align: 'center' }}
+                    className="justify-start"
+                  >
+                    <item.icon className="h-5 w-5 mr-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            ))
+          ) : (
+            // Fallback for initial render before `mounted` is true or if auth state is indeterminate.
+            // Renders the static auth links by default during this phase.
+            authNavItems.map((item) => (
+              <SidebarMenuItem key={item.href} className="group-data-[collapsible=icon]:my-1">
+                <Link href={item.href}>
+                  <SidebarMenuButton
+                    variant="ghost"
+                    size="default"
+                    isActive={pathname === item.href}
+                    tooltip={{ children: item.label, side: 'right', align: 'center' }}
+                    className="justify-start"
+                  >
+                    <item.icon className="h-5 w-5 mr-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            ))
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border">
