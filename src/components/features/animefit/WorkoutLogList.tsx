@@ -1,0 +1,172 @@
+"use client";
+import { useState, useEffect } from 'react';
+import type { Exercise, DailyLog, UserProfile } from '@/lib/types';
+import { WORKOUTS, MAIN_WORKOUT_ID, XP_PER_EXERCISE, XP_PER_WORKOUT_COMPLETION_BONUS, DEFAULT_USER_PROFILE_ID, getXpToNextLevel, CHARACTERS } from '@/lib/constants';
+import useLocalStorageState from '@/hooks/use-local-storage-state';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { WorkoutCompletionModal } from './WorkoutCompletionModal';
+import { toast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { Dumbbell, CheckCircle2, Sparkles } from 'lucide-react';
+
+export function WorkoutLogList() {
+  const today = new Date().toISOString().split('T')[0];
+  const [dailyLogs, setDailyLogs] = useLocalStorageState<Record<string, DailyLog>>('dailyLogs', {});
+  const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
+  
+  const [currentLog, setCurrentLog] = useState<DailyLog>(
+    dailyLogs[today] || { date: today, completedExerciseIds: [], workoutCompleted: false }
+  );
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number }>({ xpEarned: 0, levelledUp: false });
+
+  const workout = WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID);
+
+  useEffect(() => {
+    setCurrentLog(dailyLogs[today] || { date: today, completedExerciseIds: [], workoutCompleted: false });
+  }, [today, dailyLogs]);
+
+  if (!workout || !userProfile) {
+    return <p>Loading workout data or user profile...</p>;
+  }
+
+  const handleToggleExercise = (exerciseId: string) => {
+    if (currentLog.workoutCompleted) return; // Don't allow changes if workout is already marked completed for the day
+
+    setCurrentLog(prevLog => {
+      const newCompletedExerciseIds = prevLog.completedExerciseIds.includes(exerciseId)
+        ? prevLog.completedExerciseIds.filter(id => id !== exerciseId)
+        : [...prevLog.completedExerciseIds, exerciseId];
+      return { ...prevLog, completedExerciseIds: newCompletedExerciseIds };
+    });
+  };
+
+  const handleFinishWorkout = () => {
+    if (currentLog.workoutCompleted) {
+      toast({ title: "Already Completed!", description: "You've already logged this workout for today." });
+      return;
+    }
+
+    const exercisesDoneCount = currentLog.completedExerciseIds.length;
+    if (exercisesDoneCount === 0) {
+      toast({ title: "No Exercises Logged", description: "Please complete at least one exercise.", variant: "destructive" });
+      return;
+    }
+
+    let xpEarned = exercisesDoneCount * XP_PER_EXERCISE;
+    const allExercisesCompleted = currentLog.completedExerciseIds.length === workout.exercises.length;
+    if (allExercisesCompleted) {
+      xpEarned += XP_PER_WORKOUT_COMPLETION_BONUS;
+    }
+    
+    let newExperiencePoints = userProfile.experiencePoints + xpEarned;
+    let newLevel = userProfile.level;
+    let levelledUp = false;
+    let xpToNext = getXpToNextLevel(newLevel);
+
+    while (newExperiencePoints >= xpToNext) {
+      newExperiencePoints -= xpToNext;
+      newLevel++;
+      levelledUp = true;
+      xpToNext = getXpToNextLevel(newLevel);
+    }
+    
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      experiencePoints: newExperiencePoints,
+      level: newLevel,
+      rewards: levelledUp ? [...userProfile.rewards, `Level ${newLevel} Achieved Aura`] : userProfile.rewards,
+    };
+    setUserProfile(updatedProfile);
+
+    const finalLog = { ...currentLog, workoutCompleted: true };
+    setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog }));
+    setCurrentLog(finalLog); // Update local state immediately
+
+    setModalData({ xpEarned, levelledUp, newLevel: levelledUp ? newLevel : undefined });
+    setShowCompletionModal(true);
+
+    toast({
+      title: "Workout Logged!",
+      description: `You earned ${xpEarned} XP. Keep up the great work!`,
+    });
+  };
+  
+  const progressPercentage = workout.exercises.length > 0 ? (currentLog.completedExerciseIds.length / workout.exercises.length) * 100 : 0;
+
+  return (
+    <>
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center">
+            <Dumbbell className="mr-2 h-7 w-7" />
+            {workout.name} - {new Date(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+          </CardTitle>
+          <p className="text-muted-foreground">Log your exercises for today. Every rep brings you closer to your hero form!</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <Label className="text-sm font-medium text-foreground/80">Progress: {currentLog.completedExerciseIds.length} / {workout.exercises.length} exercises</Label>
+            <Progress value={progressPercentage} className="w-full h-3 mt-1 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-primary" />
+          </div>
+          <ul className="space-y-4">
+            {workout.exercises.map((exercise, index) => (
+              <li key={exercise.id}>
+                <div className="flex items-center justify-between p-4 bg-background rounded-lg shadow hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`exercise-${exercise.id}`}
+                      checked={currentLog.completedExerciseIds.includes(exercise.id)}
+                      onCheckedChange={() => handleToggleExercise(exercise.id)}
+                      disabled={currentLog.workoutCompleted}
+                      aria-label={`Mark ${exercise.name} as complete`}
+                    />
+                    <Label htmlFor={`exercise-${exercise.id}`} className="text-lg font-medium text-foreground cursor-pointer">
+                      {exercise.name}
+                    </Label>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {exercise.sets && exercise.reps && `${exercise.sets} sets x ${exercise.reps} reps`}
+                    {exercise.duration && `${exercise.duration}`}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 pl-4">{exercise.description}</p>
+                {index < workout.exercises.length - 1 && <Separator className="my-4" />}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={handleFinishWorkout} 
+            disabled={currentLog.workoutCompleted || currentLog.completedExerciseIds.length === 0} 
+            size="lg" 
+            className="w-full font-headline text-lg"
+          >
+            {currentLog.workoutCompleted ? (
+              <>
+                <CheckCircle2 className="mr-2 h-5 w-5" /> Workout Completed Today!
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-5 w-5" /> Finish & Log Workout
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+      <WorkoutCompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        characterName={CHARACTERS.find(c => c.id === userProfile.selectedCharacterId)?.name}
+        xpEarned={modalData.xpEarned}
+        levelledUp={modalData.levelledUp}
+        newLevel={modalData.newLevel}
+      />
+    </>
+  );
+}
