@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import type { Exercise, DailyLog, UserProfile } from '@/lib/types';
@@ -11,7 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { WorkoutCompletionModal } from './WorkoutCompletionModal';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
-import { Dumbbell, CheckCircle2, Sparkles } from 'lucide-react';
+import { Dumbbell, CheckCircle2, Sparkles, HelpCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function WorkoutLogList() {
   const today = new Date().toISOString().split('T')[0];
@@ -23,6 +25,7 @@ export function WorkoutLogList() {
   );
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number }>({ xpEarned: 0, levelledUp: false });
+  const [helpExercise, setHelpExercise] = useState<Exercise | null>(null);
 
   const workout = WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID);
 
@@ -35,7 +38,7 @@ export function WorkoutLogList() {
   }
 
   const handleToggleExercise = (exerciseId: string) => {
-    if (currentLog.workoutCompleted) return; // Don't allow changes if workout is already marked completed for the day
+    if (currentLog.workoutCompleted) return; 
 
     setCurrentLog(prevLog => {
       const newCompletedExerciseIds = prevLog.completedExerciseIds.includes(exerciseId)
@@ -85,7 +88,7 @@ export function WorkoutLogList() {
 
     const finalLog = { ...currentLog, workoutCompleted: true };
     setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog }));
-    setCurrentLog(finalLog); // Update local state immediately
+    setCurrentLog(finalLog);
 
     setModalData({ xpEarned, levelledUp, newLevel: levelledUp ? newLevel : undefined });
     setShowCompletionModal(true);
@@ -129,12 +132,17 @@ export function WorkoutLogList() {
                       {exercise.name}
                     </Label>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {exercise.sets && exercise.reps && `${exercise.sets} sets x ${exercise.reps} reps`}
-                    {exercise.duration && `${exercise.duration}`}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {exercise.sets && exercise.reps && `${exercise.sets} sets x ${exercise.reps} reps`}
+                      {exercise.duration && `${exercise.duration}`}
+                    </span>
+                    <Button variant="ghost" size="icon" onClick={() => setHelpExercise(exercise)} aria-label={`Help for ${exercise.name}`}>
+                      <HelpCircle className="h-5 w-5 text-muted-foreground hover:text-primary" />
+                    </Button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 pl-4">{exercise.description}</p>
+                <p className="text-xs text-muted-foreground mt-1 pl-4">{exercise.description.substring(0, 100)}{exercise.description.length > 100 ? '...' : ''}</p>
                 {index < workout.exercises.length - 1 && <Separator className="my-4" />}
               </li>
             ))}
@@ -159,6 +167,24 @@ export function WorkoutLogList() {
           </Button>
         </CardFooter>
       </Card>
+
+      <Dialog open={!!helpExercise} onOpenChange={(isOpen) => { if (!isOpen) setHelpExercise(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-headline text-primary">{helpExercise?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-foreground">{helpExercise?.description}</p>
+            {(helpExercise?.sets && helpExercise?.reps) && 
+              <p className="text-sm text-muted-foreground mt-2">Recommended: {helpExercise.sets} sets of {helpExercise.reps} reps.</p>
+            }
+            {helpExercise?.duration &&
+              <p className="text-sm text-muted-foreground mt-2">Recommended duration: {helpExercise.duration}.</p>
+            }
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <WorkoutCompletionModal
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}

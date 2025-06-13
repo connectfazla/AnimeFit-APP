@@ -4,83 +4,85 @@
 
 @layer base {
   :root {
-    --background: 60 56% 93%; /* #F5F5DC Light Beige */
-    --foreground: 40 10% 20%; /* Dark Brown/Gray */
+    --background: 0 0% 98%; /* Near White */
+    --foreground: 0 0% 9%; /* Near Black */
 
-    --card: 60 50% 97%; /* Lighter Beige */
-    --card-foreground: 40 10% 20%; /* Dark Brown/Gray */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 9%; /* Near Black */
 
-    --popover: 60 50% 97%; /* Lighter Beige */
-    --popover-foreground: 40 10% 20%; /* Dark Brown/Gray */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 9%; /* Near Black */
 
-    --primary: 16 100% 63%; /* #FF7849 Vibrant Orange */
-    --primary-foreground: 30 100% 98%; /* Light Cream */
+    --primary: 25 100% 50%; /* Crunchyroll Orange #FF6600 */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 25 80% 85%; /* Lighter Desaturated Orange */
-    --secondary-foreground: 20 50% 30%; /* Darker Orange/Brown */
+    --secondary: 25 100% 85%; /* Lighter Orange */
+    --secondary-foreground: 25 100% 30%; /* Darker Orange for text on light orange */
 
-    --muted: 60 30% 90%; /* Very Light Gray/Off-Beige */
-    --muted-foreground: 60 10% 45%; /* Mid-Gray */
+    --muted: 0 0% 96.1%; /* Light Gray #F5F5F5 */
+    --muted-foreground: 0 0% 45.1%; /* Mid Gray #737373 */
 
-    --accent: 181 100% 74%; /* #7DF9FF Electric Blue */
-    --accent-foreground: 180 100% 20%; /* Dark Blue/Teal */
+    --accent: 45 100% 50%; /* Bright Yellow #FFD500 */
+    --accent-foreground: 0 0% 9%; /* Near Black for text on yellow */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 60 40% 85%; /* Slightly Darker Beige */
-    --input: 60 40% 88%; /* Slightly Lighter/Similar to Border */
-    --ring: 16 100% 63%; /* Primary Orange */
+    --border: 0 0% 89.8%; /* Light Gray Border #E5E5E5 */
+    --input: 0 0% 89.8%; /* Light Gray Input Background */
+    --ring: 25 100% 50%; /* Primary Orange for focus rings */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 55 40% 95%; /* Slightly different light beige for sidebar */
-    --sidebar-foreground: 40 10% 25%;
-    --sidebar-primary: 16 100% 63%; 
-    --sidebar-primary-foreground: 30 100% 98%;
-    --sidebar-accent: 16 90% 70%; 
-    --sidebar-accent-foreground: 30 100% 98%;
-    --sidebar-border: 60 40% 80%;
-    --sidebar-ring: 181 100% 74%;
+    /* Sidebar variables aligned with main theme */
+    --sidebar-background: 0 0% 96%; /* Slightly off-white like muted */
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 25 100% 50%; 
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 100% 50%; 
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 85%; /* Consistent with main border or slightly darker */
+    --sidebar-ring: 45 100% 50%;
   }
 
   .dark {
-    --background: 40 10% 10%; 
-    --foreground: 60 56% 93%; 
+    --background: 0 0% 9%; /* Near Black */
+    --foreground: 0 0% 98%; /* Near White */
 
-    --card: 40 10% 15%;
-    --card-foreground: 60 56% 93%;
+    --card: 0 0% 12.9%; /* Dark Gray #212121 */
+    --card-foreground: 0 0% 98%;
 
-    --popover: 40 10% 15%;
-    --popover-foreground: 60 56% 93%;
+    --popover: 0 0% 12.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 16 100% 63%; 
-    --primary-foreground: 40 10% 10%; 
+    --primary: 25 100% 50%; /* Crunchyroll Orange */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 25 70% 50%; 
-    --secondary-foreground: 60 56% 93%; 
+    --secondary: 25 100% 30%; /* Darker Orange */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 40 10% 25%;
-    --muted-foreground: 60 30% 70%;
+    --muted: 0 0% 14.9%; /* Dark Gray #262626 */
+    --muted-foreground: 0 0% 63.9%; /* Lighter Gray #A3A3A3 */
 
-    --accent: 181 100% 74%; 
-    --accent-foreground: 180 100% 10%;
+    --accent: 45 100% 50%; /* Bright Yellow */
+    --accent-foreground: 0 0% 9%; /* Near Black for text on yellow */
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 10% 25%;
-    --input: 40 10% 28%;
-    --ring: 16 100% 63%;
+    --border: 0 0% 14.9%; /* Dark Gray Border */
+    --input: 0 0% 14.9%; /* Dark Gray Input Background */
+    --ring: 25 100% 50%;
     
-    --sidebar-background: 40 10% 12%;
-    --sidebar-foreground: 60 50% 90%;
-    --sidebar-primary: 16 100% 63%;
-    --sidebar-primary-foreground: 40 10% 10%;
-    --sidebar-accent: 16 90% 55%;
-    --sidebar-accent-foreground: 40 10% 10%;
-    --sidebar-border: 40 10% 20%;
-    --sidebar-ring: 181 100% 74%;
+    /* Sidebar variables aligned with main theme for dark mode */
+    --sidebar-background: 0 0% 12%; /* Slightly off-black */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 25 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 100% 50%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 20%; /* Darker border for sidebar */
+    --sidebar-ring: 45 100% 50%;
   }
 }
 
