@@ -2,10 +2,10 @@
 "use client";
 import { useState, useEffect } from 'react';
 import type { Exercise, DailyLog, UserProfile } from '@/lib/types';
-import { WORKOUTS, MAIN_WORKOUT_ID, XP_PER_EXERCISE, XP_PER_WORKOUT_COMPLETION_BONUS, DEFAULT_USER_PROFILE_ID, getXpToNextLevel, CHARACTERS } from '@/lib/constants';
+import { WORKOUTS, MAIN_WORKOUT_ID, XP_PER_EXERCISE, XP_PER_WORKOUT_COMPLETION_BONUS, DEFAULT_USER_PROFILE_ID, DEFAULT_USER_PROFILE, getXpToNextLevel, CHARACTERS } from '@/lib/constants';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -13,16 +13,17 @@ import { WorkoutCompletionModal } from './WorkoutCompletionModal';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Dumbbell, CheckCircle2, Sparkles, HelpCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Removed DialogTrigger, DialogDescription as they aren't used for help dialog
 
 export function WorkoutLogList() {
   const today = new Date().toISOString().split('T')[0];
   const [dailyLogs, setDailyLogs] = useLocalStorageState<Record<string, DailyLog>>('dailyLogs', {});
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
+  const [isClient, setIsClient] = useState(false);
   
-  const [currentLog, setCurrentLog] = useState<DailyLog>(
-    dailyLogs[today] || { date: today, completedExerciseIds: [], workoutCompleted: false }
-  );
+  const initialLogState = { date: today, completedExerciseIds: [], workoutCompleted: false };
+  const [currentLog, setCurrentLog] = useState<DailyLog>(initialLogState);
+  
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number }>({ xpEarned: 0, levelledUp: false });
   const [helpExercise, setHelpExercise] = useState<Exercise | null>(null);
@@ -30,12 +31,44 @@ export function WorkoutLogList() {
   const workout = WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID);
 
   useEffect(() => {
-    setCurrentLog(dailyLogs[today] || { date: today, completedExerciseIds: [], workoutCompleted: false });
-  }, [today, dailyLogs]);
+    setIsClient(true);
+  }, []);
 
-  if (!workout || !userProfile) {
-    return <p>Loading workout data or user profile...</p>;
+  useEffect(() => {
+    if (isClient) {
+      if (!userProfile) {
+        setUserProfile(DEFAULT_USER_PROFILE);
+      }
+      setCurrentLog(dailyLogs[today] || initialLogState);
+    }
+  }, [isClient, today, dailyLogs, userProfile, setUserProfile, initialLogState]);
+
+
+  if (!isClient || !workout || !userProfile) {
+    return (
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center">
+            <Dumbbell className="mr-2 h-7 w-7" />
+            {workout?.name || "Today's Challenge"} - {new Date(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">Loading workout...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label>Progress: Loading...</Label>
+            <Progress value={0} className="w-full h-3 mt-1" />
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button size="lg" className="w-full font-headline text-lg" disabled>
+            Loading...
+          </Button>
+        </CardFooter>
+      </Card>
+    );
   }
+
 
   const handleToggleExercise = (exerciseId: string) => {
     if (currentLog.workoutCompleted) return; 
@@ -109,7 +142,7 @@ export function WorkoutLogList() {
             <Dumbbell className="mr-2 h-7 w-7" />
             {workout.name} - {new Date(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
           </CardTitle>
-          <p className="text-muted-foreground">Log your exercises for today. Every rep brings you closer to your hero form!</p>
+          <CardDescription className="text-muted-foreground">Log your exercises for today. Every rep brings you closer to your hero form!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>

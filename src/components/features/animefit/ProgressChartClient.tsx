@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts"
@@ -5,12 +6,12 @@ import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { DailyLog } from "@/lib/types"
 import { TrendingUp } from "lucide-react"
+import { useEffect, useState } from 'react';
 
 interface ProgressChartClientProps {
   dailyLogs: Record<string, DailyLog>;
 }
 
-// Helper to get week number
 const getWeek = (date: Date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -20,14 +21,28 @@ const getWeek = (date: Date) => {
 };
 
 export function ProgressChartClient({ dailyLogs }: ProgressChartClientProps) {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => { setIsClient(true); }, []);
+
+  if (!isClient) {
+     return (
+       <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-xl text-primary flex items-center"><TrendingUp className="mr-2 h-6 w-6"/>Workout Progress</CardTitle>
+          <CardDescription className="text-muted-foreground">Loading chart data...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-64">
+            <p className="text-muted-foreground">Your progress chart will appear here.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const chartData = Object.values(dailyLogs)
     .filter(log => log.workoutCompleted)
     .reduce((acc, log) => {
       const date = new Date(log.date);
-      // const month = date.toLocaleString('default', { month: 'short' });
-      // const year = date.getFullYear();
-      // const key = `${month} ${year}`;
-      const week = `W${getWeek(date)} ${date.getFullYear()}`; // Group by week
+      const week = `W${getWeek(date)} ${date.getFullYear()}`;
       
       if (!acc[week]) {
         acc[week] = { week, workouts: 0 };
@@ -41,7 +56,7 @@ export function ProgressChartClient({ dailyLogs }: ProgressChartClientProps) {
     const [bWeekPart, bYearPart] = b.week.substring(1).split(" ");
     if (aYearPart !== bYearPart) return parseInt(aYearPart) - parseInt(bYearPart);
     return parseInt(aWeekPart) - parseInt(bWeekPart);
-  }).slice(-12); // Show last 12 weeks
+  }).slice(-12);
 
   const chartConfig = {
     workouts: {

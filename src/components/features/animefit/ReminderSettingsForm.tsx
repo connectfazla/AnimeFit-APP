@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import type { UserProfile } from '@/lib/types';
@@ -13,15 +14,71 @@ import { BellRing } from 'lucide-react';
 export function ReminderSettingsForm() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [reminderTime, setReminderTime] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (userProfile && userProfile.reminderTime) {
-      setReminderTime(userProfile.reminderTime);
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      if (userProfile && userProfile.reminderTime) {
+        setReminderTime(userProfile.reminderTime);
+      } else if (userProfile && !userProfile.reminderTime) {
+        setReminderTime("");
+      }
     }
-  }, [userProfile]);
+  }, [isClient, userProfile]);
+
+  if (!isClient) {
+    return (
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center">
+             <BellRing className="mr-2 h-7 w-7" /> Workout Reminders
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Set a daily reminder to never miss a training session. Stay disciplined like your favorite hero!
+            (UI for reminder setting only, actual notifications not implemented).
+          </CardDescription>
+        </CardHeader>
+        <form>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="reminderTime-placeholder" className="text-md font-medium text-foreground">Reminder Time</Label>
+              <Input
+                id="reminderTime-placeholder"
+                type="time"
+                value=""
+                disabled
+                className="mt-1 w-full md:w-1/2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave blank to disable reminders.
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full font-headline text-lg" disabled>Save Reminder Settings</Button>
+          </CardFooter>
+        </form>
+      </Card>
+    );
+  }
 
   if (!userProfile) {
-    return <p>Loading profile...</p>;
+     return (
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center">
+             <BellRing className="mr-2 h-7 w-7" /> Workout Reminders
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Loading user profile to set reminders...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
   const handleSaveReminders = (e: React.FormEvent) => {

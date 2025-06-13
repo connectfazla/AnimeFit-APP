@@ -1,5 +1,6 @@
+
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -10,24 +11,75 @@ import { LevelIndicator } from '@/components/features/animefit/LevelIndicator';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID, CHARACTERS } from '@/lib/constants';
 import type { UserProfile, AnimeCharacter, DailyLog } from '@/lib/types';
-import { ArrowRight, BarChartBig, Users, CalendarPlus } from 'lucide-react';
+import { ArrowRight, BarChartBig, Users, CalendarPlus, TrendingUp } from 'lucide-react'; // Added TrendingUp
 
 export default function DashboardPage() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
-  const [dailyLogs] = useLocalStorageState<Record<string, DailyLog>>('dailyLogs', {});
+  const [dailyLogs, setDailyLogs] = useLocalStorageState<Record<string, DailyLog>>('dailyLogs', {});
+  const [isClient, setIsClient] = useState(false);
 
-  // Initialize profile if it doesn't exist
   useEffect(() => {
-    if (!userProfile) {
+    setIsClient(true);
+  }, []);
+
+  // Initialize profile if it doesn't exist and client has mounted
+  useEffect(() => {
+    if (isClient && !userProfile) {
       setUserProfile(DEFAULT_USER_PROFILE);
     }
-  }, [userProfile, setUserProfile]);
+  }, [isClient, userProfile, setUserProfile]);
 
-  const selectedCharacter: AnimeCharacter | undefined = userProfile 
+  const selectedCharacter: AnimeCharacter | undefined = 
+    (isClient && userProfile) 
     ? CHARACTERS.find(char => char.id === userProfile.selectedCharacterId) 
     : undefined;
 
+  if (!isClient) {
+    // SSR or pre-hydration on client: Render a consistent loading state
+    return (
+      <AppLayout pageTitle="Dashboard">
+        <div className="container mx-auto py-8 space-y-8">
+          <Card className="shadow-xl bg-gradient-to-br from-primary/20 via-card/70 to-accent/20 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
+                Loading Dashboard...
+              </CardTitle>
+              <CardDescription className="text-lg text-foreground/80">
+                Please wait while we prepare your hero stats!
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-4 text-center text-muted-foreground">Loading level...</CardContent>
+            </Card>
+            <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle className="font-headline text-xl text-primary flex items-center"><CalendarPlus className="mr-2 h-6 w-6"/>Today's Quest</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Button size="lg" className="w-full font-headline text-lg" disabled>
+                        Loading Workout...
+                    </Button>
+                </CardContent>
+            </Card>
+          </div>
+          <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="font-headline text-xl text-primary flex items-center"><TrendingUp className="mr-2 h-6 w-6"/>Workout Progress</CardTitle>
+              <CardDescription className="text-muted-foreground">Loading chart data...</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center h-64">
+                <p className="text-muted-foreground">Your progress chart will appear here.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
+    );
+  }
+  
   if (!userProfile) {
+    // This state occurs after isClient is true, but before userProfile is potentially defaulted
     return (
       <AppLayout pageTitle="Dashboard">
         <div className="flex items-center justify-center h-full">
@@ -101,7 +153,6 @@ export default function DashboardPage() {
         
         <ProgressChartClient dailyLogs={dailyLogs} />
 
-        {/* Quick Links Section */}
         <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
             <CardHeader>
                 <CardTitle className="font-headline text-xl text-primary">Quick Actions</CardTitle>
