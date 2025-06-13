@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, Dumbbell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { APP_NAME } from '@/lib/constants';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
 
@@ -18,7 +17,7 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" side="left" defaultOpen={true}>
+    <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
           <Dumbbell className="h-8 w-8 text-primary" />
