@@ -4,12 +4,12 @@ import type { AnimeCharacter, Exercise, Workout, UserProfile } from './types';
 export const APP_NAME = "AnimeFit";
 
 export const CHARACTERS: AnimeCharacter[] = [
-  { id: 'goku', name: 'Son Goku', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime warrior', description: 'A powerful Saiyan warrior from Earth.', powerLevel: 9001 },
-  { id: 'naruto', name: 'Naruto Uzumaki', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime ninja', description: 'The unpredictable knucklehead ninja of Konoha.', powerLevel: 7000 },
-  { id: 'luffy', name: 'Monkey D. Luffy', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime pirate', description: 'Captain of the Straw Hat Pirates, aiming to be Pirate King.', powerLevel: 8000 },
-  { id: 'saitama', name: 'Saitama', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime hero', description: 'A hero for fun, capable of defeating any enemy with a single punch.', powerLevel: 99999 },
-  { id: 'nezuko', name: 'Nezuko Kamado', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime demon', description: 'A kind girl turned demon, fighting alongside her brother.', powerLevel: 6500 },
-  { id: 'levi', name: 'Levi Ackerman', imageUrl: 'https://placehold.co/200x300.png', dataAiHint: 'anime soldier', description: "Humanity's strongest soldier in the fight against Titans.", powerLevel: 8500 },
+  { id: 'goku', name: 'Son Goku', imageUrl: 'https://dragonball.fandom.com/wiki/File:Son_Goku.png', dataAiHint: 'anime warrior', description: 'A powerful Saiyan warrior from Earth.', powerLevel: 9001 },
+  { id: 'naruto', name: 'Naruto Uzumaki', imageUrl: 'https://unsplash.com/photos/naruto-uzumaki', dataAiHint: 'anime ninja', description: 'The unpredictable knucklehead ninja of Konoha.', powerLevel: 7000 },
+  { id: 'luffy', name: 'Monkey D. Luffy', imageUrl: 'https://unsplash.com/photos/monkey-d-luffy', dataAiHint: 'anime pirate', description: 'Captain of the Straw Hat Pirates, aiming to be Pirate King.', powerLevel: 8000 },
+  { id: 'saitama', name: 'Saitama', imageUrl: 'https://unsplash.com/photos/saitama', dataAiHint: 'anime hero', description: 'A hero for fun, capable of defeating any enemy with a single punch.', powerLevel: 99999 },
+  { id: 'nezuko', name: 'Nezuko Kamado', imageUrl: 'https://kimetsu-no-yaiba.fandom.com/wiki/File:Nezuko_Kamado.png', dataAiHint: 'anime demon', description: 'A kind girl turned demon, fighting alongside her brother.', powerLevel: 6500 },
+  { id: 'levi', name: 'Levi Ackerman', imageUrl: 'https://attackontitan.fandom.com/wiki/File:Levi_Ackerman.png', dataAiHint: 'anime soldier', description: "Humanity's strongest soldier in the fight against Titans.", powerLevel: 8500 },
 ];
 
 export const EXERCISES: Exercise[] = [
@@ -48,3 +48,4 @@ export const XP_PER_WORKOUT_COMPLETION_BONUS = 50;
 export const getXpToNextLevel = (level: number): number => {
   return 100 * Math.pow(1.2, level -1); // Exponentially increasing XP requirement
 };
+
