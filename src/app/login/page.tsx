@@ -95,8 +95,8 @@ export default function LoginPage() {
         <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
           <CardHeader className="text-center">
              <Image
-                src="/logo.png"
-                alt={`${APP_NAME} logo`}
+                src="/animefit.svg"
+                alt={`${APP_NAME} loading logo`}
                 width={64}
                 height={64}
                 className="mx-auto mb-4"
@@ -117,7 +117,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Link href="/" className="mb-6 inline-block">
             <Image
-              src="/logo.png"
+              src="/animefit.svg"
               alt={`${APP_NAME} logo`}
               width={80}
               height={80}

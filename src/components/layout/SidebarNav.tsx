@@ -61,11 +61,10 @@ export function SidebarNav() {
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/logo.png"
+            src="/animefit.svg"
             alt={`${APP_NAME} logo`}
             width={32}
             height={32}
-            className="text-primary"
             data-ai-hint="app logo"
           />
           <span className="font-headline text-2xl font-bold text-primary group-data-[collapsible=icon]:hidden">
