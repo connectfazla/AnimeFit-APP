@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmail, signInWithGoogle, onAuthStateChanged } from '@/lib/firebase/authService';
+import { signInWithEmail, signInWithGoogle, onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
 import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 
@@ -95,7 +95,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
           <CardHeader className="text-center">
              <Image
-                src="/ANIMEFIT.svg"
+                src="https://uppearance.com/wp-content/uploads/2025/06/ANIME-FIT-1.png"
                 alt={`${APP_NAME} loading logo`}
                 width={64}
                 height={64}
@@ -117,7 +117,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Link href="/" className="mb-6 inline-block">
             <Image
-              src="/ANIMEFIT.svg"
+              src="https://uppearance.com/wp-content/uploads/2025/06/ANIME-FIT-1.png"
               alt={`${APP_NAME} logo`}
               width={80}
               height={80}

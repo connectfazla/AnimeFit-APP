@@ -25,13 +25,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'unsplash.com', // For Unsplash page links, direct images often on images.unsplash.com
+        hostname: 'unsplash.com', 
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // For direct Unsplash image files
+        hostname: 'images.unsplash.com', 
         port: '',
         pathname: '/**',
       },
@@ -49,7 +49,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'static.wikia.nocookie.net', // Common CDN for Fandom images
+        hostname: 'static.wikia.nocookie.net', 
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'uppearance.com',
         port: '',
         pathname: '/**',
       }
