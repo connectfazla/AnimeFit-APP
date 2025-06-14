@@ -23,7 +23,7 @@ const createExerciseIntensity = (normal: IntensityConfig, easyMultiplier: number
     if (!durationStr || !durationStr.endsWith('s')) return durationStr;
     const seconds = parseInt(durationStr.slice(0, -1));
     if (isNaN(seconds)) return durationStr;
-    return `${Math.max(60, Math.round(seconds * multiplier))}s`; // Ensure minimum 60s for duration
+    return `${Math.max(60, Math.round(seconds * multiplier))}s`; 
   };
 
   return {
@@ -47,38 +47,38 @@ export const EXERCISES: Exercise[] = [
   { 
     id: 'benchpress', name: 'Herculean Bench Press', 
     description: 'Forge a chest of steel with this classic compound lift using a barbell.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/SCVCLChPQFY', // Example: ScottHermanFitness - How To: Barbell Bench Press
-    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) // Normal: 3 sets of 8 reps
+    videoTutorialUrl: 'https://www.youtube.com/embed/SCVCLChPQFY', 
+    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) 
   },
   { 
     id: 'barbellrows', name: 'Dragon Back Rows', 
     description: 'Sculpt a powerful back worthy of a mythical beast with barbell rows.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/G8l_8chR5BE', // Example: Alan Thrall - How to Barbell Row with Correct Form
-    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) // Normal: 3 sets of 10 reps
+    videoTutorialUrl: 'https://www.youtube.com/embed/G8l_8chR5BE', 
+    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) 
   },
   { 
     id: 'overheadpress', name: 'Celestial Shoulder Press', 
     description: 'Raise your power level with this shoulder-defining press (dumbbells or barbell).', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/B-aVuyhvLHU', // Example: Jeff Nippard - The Smartest Way To Overhead Press
-    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) // Normal: 3 sets of 10 reps
+    videoTutorialUrl: 'https://www.youtube.com/embed/B-aVuyhvLHU', 
+    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) 
   },
   { 
     id: 'barbellsquats', name: 'Colossal Titan Squats', 
     description: 'Build legs that can withstand any onslaught with heavy barbell squats.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/Uv_DKDl7EjA', // Example: Squat University - How To SQUAT With Perfect Form
-    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) // Normal: 3 sets of 8 reps
+    videoTutorialUrl: 'https://www.youtube.com/embed/Uv_DKDl7EjA', 
+    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) 
   },
   { 
     id: 'deadlifts', name: 'Earthshaker Deadlifts', 
     description: 'Channel the planet\'s might with this ultimate test of strength (conventional deadlift).', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/ytGaGIn3SjE', // Example: Alan Thrall - How To Deadlift: Starting Strength 5 Step Deadlift
-    intensity: createExerciseIntensity({ sets: 1, reps: 5 }) // Normal: 1 set of 5 reps (common for heavy deadlifts)
+    videoTutorialUrl: 'https://www.youtube.com/embed/ytGaGIn3SjE', 
+    intensity: createExerciseIntensity({ sets: 1, reps: 5 }) 
   },
   { 
     id: 'stationarybike', name: 'Infinite Stamina Cycle', 
     description: 'Boost your endurance with high-intensity intervals or a steady state ride on a stationary bike.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/Xm13J4u6MhQ', // Example: GCN - HIIT On A Static Bike
-    intensity: createExerciseIntensity({ duration: "900s" }, 0.66, 1.33) // Normal: 15 min, Easy: ~10 min, Hard: ~20 min
+    videoTutorialUrl: 'https://www.youtube.com/embed/Xm13J4u6MhQ', 
+    intensity: createExerciseIntensity({ duration: "900s" }, 0.66, 1.33) 
   },
 ];
 
@@ -104,10 +104,11 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   reminderTime: "08:00",
   currentStreak: 0,
   lastWorkoutDate: null,
+  lastReminderDismissedDate: null,
 };
 
 export const XP_PER_EXERCISE = 10;
-export const XP_PER_WORKOUT_COMPLETION_BONUS = 50; // Bonus for completing ALL exercises in the workout
+export const XP_PER_WORKOUT_COMPLETION_BONUS = 50; 
 export const XP_EXTRA_QUEST_BONUS = 75;
 
 export const XP_DIFFICULTY_MULTIPLIERS: Record<DifficultyLevel, number> = {
@@ -119,4 +120,3 @@ export const XP_DIFFICULTY_MULTIPLIERS: Record<DifficultyLevel, number> = {
 export const getXpToNextLevel = (level: number): number => {
   return 100 * Math.pow(1.2, level -1);
 };
-

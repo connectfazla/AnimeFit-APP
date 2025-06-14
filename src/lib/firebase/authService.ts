@@ -28,10 +28,11 @@ export async function signUpWithEmail(email: string, password: string, name: str
   await firebaseUpdateProfile(userCredential.user, { displayName: name });
   
   const newUserProfile: UserProfile = {
-    ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
+    ...DEFAULT_USER_PROFILE, 
     id: userCredential.user.uid,
     name: name || userCredential.user.displayName || "Anime Hero",
     customProfileImageUrl: null, 
+    lastReminderDismissedDate: null,
   };
 
   if (typeof window !== 'undefined') {
@@ -56,10 +57,11 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
     let userProfile = JSON.parse(localStorage.getItem(`userProfile-${user.uid}`) || 'null') as UserProfile | null;
     if (!userProfile) {
       userProfile = {
-        ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
+        ...DEFAULT_USER_PROFILE, 
         id: user.uid,
         name: user.displayName || "Anime Hero",
         customProfileImageUrl: user.photoURL || null,
+        lastReminderDismissedDate: null,
       };
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     } else {
@@ -67,6 +69,7 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
       userProfile.customProfileImageUrl = userProfile.customProfileImageUrl === undefined ? (user.photoURL || null) : userProfile.customProfileImageUrl;
       userProfile.currentStreak = userProfile.currentStreak === undefined ? 0 : userProfile.currentStreak;
       userProfile.lastWorkoutDate = userProfile.lastWorkoutDate === undefined ? null : userProfile.lastWorkoutDate;
+      userProfile.lastReminderDismissedDate = userProfile.lastReminderDismissedDate === undefined ? null : userProfile.lastReminderDismissedDate;
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     }
     localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(userProfile));
@@ -91,13 +94,13 @@ async function loadAndActivateUserProfile(user: FirebaseUser) {
     
     if (!userProfile) {
       userProfile = {
-        ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
+        ...DEFAULT_USER_PROFILE, 
         id: user.uid,
         name: user.displayName || "Anime Hero",
         customProfileImageUrl: user.photoURL || null, 
+        lastReminderDismissedDate: null,
       };
     } else {
-      // Ensure new fields are present if loading an older profile structure
        if (userProfile.customProfileImageUrl === undefined) {
          userProfile.customProfileImageUrl = user.photoURL || null;
        }
@@ -106,6 +109,9 @@ async function loadAndActivateUserProfile(user: FirebaseUser) {
        }
        if (userProfile.lastWorkoutDate === undefined) {
          userProfile.lastWorkoutDate = null;
+       }
+       if (userProfile.lastReminderDismissedDate === undefined) {
+         userProfile.lastReminderDismissedDate = null;
        }
     }
     localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
