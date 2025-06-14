@@ -12,12 +12,12 @@ export const CHARACTERS: AnimeCharacter[] = [
 ];
 
 export const EXERCISES: Exercise[] = [
-  { id: 'pushups', name: 'Saiyan Push-ups', description: 'Explosive push-ups to build upper body strength.', sets: 3, reps: 15 },
-  { id: 'squats', name: 'Ninja Squats', description: 'Deep squats for leg power and agility.', sets: 3, reps: 20 },
-  { id: 'plank', name: 'Titan Plank', description: 'Hold a rock-solid plank like a true defender.', duration: "60s" },
-  { id: 'jumpingjacks', name: 'Flash Step Jacks', description: 'Rapid jumping jacks for speed and endurance.', duration: "120s" },
-  { id: 'burpees', name: 'One-Punch Burpees', description: 'Full-body explosive movement.', sets: 3, reps: 10 },
-  { id: 'running', name: 'Gear Second Run', description: 'High-intensity interval running.', duration: "300s" },
+  { id: 'pushups', name: 'Saiyan Push-ups', description: 'Explosive push-ups to build upper body strength.', sets: 3, reps: 15, videoTutorialUrl: 'https://www.youtube.com/embed/IODxDxX7oi4' },
+  { id: 'squats', name: 'Ninja Squats', description: 'Deep squats for leg power and agility.', sets: 3, reps: 20, videoTutorialUrl: 'https://www.youtube.com/embed/aclHkVg7PL8' },
+  { id: 'plank', name: 'Titan Plank', description: 'Hold a rock-solid plank like a true defender.', duration: "60s", videoTutorialUrl: 'https://www.youtube.com/embed/ASdvN_XEl_c' },
+  { id: 'jumpingjacks', name: 'Flash Step Jacks', description: 'Rapid jumping jacks for speed and endurance.', duration: "120s", videoTutorialUrl: 'https://www.youtube.com/embed/c4DAnQ6DtF8' },
+  { id: 'burpees', name: 'One-Punch Burpees', description: 'Full-body explosive movement.', sets: 3, reps: 10, videoTutorialUrl: 'https://www.youtube.com/embed/auKl9A2iWcE' },
+  { id: 'running', name: 'Gear Second Run', description: 'High-intensity interval running.', duration: "300s", videoTutorialUrl: 'https://www.youtube.com/embed/wRkeBVMQSgg' },
 ];
 
 export const MAIN_WORKOUT_ID = 'daily_challenge';
@@ -28,10 +28,10 @@ export const WORKOUTS: Workout[] = [
 
 export const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export const DEFAULT_USER_PROFILE_ID = "currentUser";
+export const DEFAULT_USER_PROFILE_ID = "currentUser"; // This ID is used as the key for the *active* user's profile in localStorage
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
-  id: DEFAULT_USER_PROFILE_ID,
+  id: DEFAULT_USER_PROFILE_ID, // This might be better set to a generic ID or dynamically to the user's UID upon creation
   name: "Anime Athlete",
   selectedCharacterId: null,
   level: 1,

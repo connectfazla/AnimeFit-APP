@@ -14,6 +14,7 @@ export interface Exercise {
   reps?: number;
   sets?: number;
   duration?: string; 
+  videoTutorialUrl?: string; // Added for video tutorials
 }
 
 export interface Workout {

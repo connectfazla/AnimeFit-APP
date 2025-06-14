@@ -59,7 +59,7 @@ export function WorkoutLogList() {
           </div>
           <Separator className="my-6" />
            <ul className="space-y-4">
-            {[...Array(WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID)?.exercises.length || 3)].map((_, index) => (
+            {(workout?.exercises || []).map((_, index) => (
               <li key={index}>
                 <div className="flex items-center justify-between p-4 bg-background rounded-lg shadow">
                   <div className="flex items-center space-x-3">
@@ -69,7 +69,7 @@ export function WorkoutLogList() {
                   <Skeleton className="h-6 w-20" />
                 </div>
                  <Skeleton className="h-3 w-3/4 mt-1 pl-4" />
-                {index < (WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID)?.exercises.length || 3) - 1 && <Separator className="my-4" />}
+                {index < ((workout?.exercises.length || 0) - 1) && <Separator className="my-4" />}
               </li>
             ))}
           </ul>
@@ -219,18 +219,30 @@ export function WorkoutLogList() {
       </Card>
 
       <Dialog open={!!helpExercise} onOpenChange={(isOpen) => { if (!isOpen) setHelpExercise(null); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
           <DialogHeader>
             <DialogTitle className="font-headline text-primary">{helpExercise?.name}</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             <p className="text-sm text-foreground">{helpExercise?.description}</p>
             {(helpExercise?.sets && helpExercise?.reps) && 
-              <p className="text-sm text-muted-foreground mt-2">Recommended: {helpExercise.sets} sets of {helpExercise.reps} reps.</p>
+              <p className="text-sm text-muted-foreground">Recommended: {helpExercise.sets} sets of {helpExercise.reps} reps.</p>
             }
             {helpExercise?.duration &&
-              <p className="text-sm text-muted-foreground mt-2">Recommended duration: {helpExercise.duration}.</p>
+              <p className="text-sm text-muted-foreground">Recommended duration: {helpExercise.duration}.</p>
             }
+            {helpExercise?.videoTutorialUrl && (
+              <div className="aspect-w-16 aspect-h-9">
+                <iframe
+                  src={helpExercise.videoTutorialUrl}
+                  title={`${helpExercise.name} Tutorial`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full rounded-md"
+                ></iframe>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
