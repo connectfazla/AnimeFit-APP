@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, LogIn, UserPlus, LogOut } from 'lucide-react';
-import { APP_NAME } from '@/lib/constants';
+import { APP_NAME, APP_LOGO_URL } from '@/lib/constants';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
 import { onAuthStateChanged, signOut as firebaseSignOutService, type FirebaseUser } from '@/lib/firebase/authService';
 import { useToast } from '@/hooks/use-toast';
@@ -59,17 +59,15 @@ export function SidebarNav() {
   return (
     <Sidebar side="left" collapsible="icon">
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center"> {/* Removed gap-2 as text is gone */}
           <Image
-            src="https://uppearance.com/wp-content/uploads/2025/06/ANIME-FIT-1.png"
+            src={APP_LOGO_URL}
             alt={`${APP_NAME} logo`}
-            width={32}
+            width={32} 
             height={32}
             data-ai-hint="app logo"
           />
-          <span className="font-headline text-2xl font-bold text-primary group-data-[collapsible=icon]:hidden">
-            {APP_NAME}
-          </span>
+          {/* The APP_NAME span has been removed */}
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
