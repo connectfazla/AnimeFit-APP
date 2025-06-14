@@ -1,3 +1,4 @@
+
 export interface AnimeCharacter {
   id: string;
   name: string;
@@ -14,7 +15,7 @@ export interface Exercise {
   reps?: number;
   sets?: number;
   duration?: string; 
-  videoTutorialUrl?: string; // Added for video tutorials
+  videoTutorialUrl?: string;
 }
 
 export interface Workout {
@@ -24,9 +25,10 @@ export interface Workout {
 }
 
 export interface UserProfile {
-  id: string; // Keep id for potential future backend integration
+  id: string;
   name: string;
   selectedCharacterId: string | null;
+  customProfileImageUrl?: string | null; // Added for custom user profile image
   level: number;
   experiencePoints: number;
   workoutDays: string[]; 

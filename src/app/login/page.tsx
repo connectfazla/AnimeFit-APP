@@ -15,7 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmail, signInWithGoogle, onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
 import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react';
-import { APP_NAME } from '@/lib/constants';
+import { APP_NAME, APP_LOGO_URL } from '@/lib/constants';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -95,7 +96,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
           <CardHeader className="text-center">
              <Image
-                src="https://uppearance.com/wp-content/uploads/2025/06/ANIME-FIT-1.png"
+                src={APP_LOGO_URL}
                 alt={`${APP_NAME} loading logo`}
                 width={64}
                 height={64}
@@ -114,14 +115,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
-        <CardHeader className="text-center">
+        <CardHeader className="items-center text-center"> {/* Added items-center */}
           <Link href="/" className="mb-6 inline-block">
             <Image
-              src="https://uppearance.com/wp-content/uploads/2025/06/ANIME-FIT-1.png"
+              src={APP_LOGO_URL}
               alt={`${APP_NAME} logo`}
-              width={80}
-              height={80}
+              width={100} // Increased size
+              height={100} // Increased size
               data-ai-hint="app logo"
+              className="mx-auto" // Ensure centering if parent is flex
             />
           </Link>
           <CardTitle className="font-headline text-3xl text-primary">Hero Login</CardTitle>

@@ -11,7 +11,7 @@ import { DEFAULT_USER_PROFILE_ID, DEFAULT_USER_PROFILE } from '@/lib/constants';
 import type { UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
-import { UserCog } from 'lucide-react';
+import { UserCog, ImageUp } from 'lucide-react';
 import { onAuthStateChanged, type FirebaseUser, updateUserProfileName } from '@/lib/firebase/authService';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -19,6 +19,7 @@ export default function EditProfilePage() {
   const router = useRouter();
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [name, setName] = useState('');
+  const [customProfileImageUrl, setCustomProfileImageUrl] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -39,32 +40,34 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     if (isClient && !authLoading && currentUser) {
-      // Try to load the active profile first
       if (userProfile && userProfile.id === currentUser.uid) {
         setName(userProfile.name);
+        setCustomProfileImageUrl(userProfile.customProfileImageUrl || '');
       } else {
-        // Fallback to user-specific or create default
         const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
         const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
         if (storedUserProfile) {
-          const loadedProfile = JSON.parse(storedUserProfile);
-          setUserProfile(loadedProfile); // Ensure active profile is the user's own
+          const loadedProfile: UserProfile = JSON.parse(storedUserProfile);
+          setUserProfile(loadedProfile);
           setName(loadedProfile.name);
+          setCustomProfileImageUrl(loadedProfile.customProfileImageUrl || '');
         } else {
           const defaultProfileForUser: UserProfile = {
             ...DEFAULT_USER_PROFILE,
             id: currentUser.uid,
             name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+            customProfileImageUrl: null,
           };
-          setUserProfile(defaultProfileForUser); // Set as active
+          setUserProfile(defaultProfileForUser);
           setName(defaultProfileForUser.name);
+          setCustomProfileImageUrl('');
           localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
         }
       }
     } else if (isClient && !authLoading && !currentUser && !userProfile) {
-        // Fallback if no user but also no profile (should be redirected by auth check)
         setUserProfile(DEFAULT_USER_PROFILE);
         setName(DEFAULT_USER_PROFILE.name);
+        setCustomProfileImageUrl(DEFAULT_USER_PROFILE.customProfileImageUrl || '');
     }
   }, [isClient, authLoading, currentUser, userProfile, setUserProfile]);
 
@@ -81,17 +84,19 @@ export default function EditProfilePage() {
 
     setIsSaving(true);
     try {
-      // Update Firebase profile display name
       await updateUserProfileName(currentUser, { displayName: name.trim() });
 
-      // Update local storage profile
-      const updatedProfile = { ...userProfile, name: name.trim() };
-      setUserProfile(updatedProfile); // Updates the active profile key
-      localStorage.setItem(`userProfile-${currentUser.uid}`, JSON.stringify(updatedProfile)); // Updates the user-specific key
+      const updatedProfile: UserProfile = { 
+        ...userProfile, 
+        name: name.trim(),
+        customProfileImageUrl: customProfileImageUrl.trim() || null,
+      };
+      setUserProfile(updatedProfile);
+      localStorage.setItem(`userProfile-${currentUser.uid}`, JSON.stringify(updatedProfile));
 
       toast({
         title: 'Profile Updated!',
-        description: 'Your hero name has been changed.',
+        description: 'Your hero details have been changed.',
       });
       router.push('/profile');
     } catch (error: any) {
@@ -120,8 +125,14 @@ export default function EditProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Skeleton className="h-6 w-24 mb-1" />
-                <Skeleton className="h-10 w-full" />
+                <div>
+                    <Skeleton className="h-6 w-24 mb-1" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <div>
+                    <Skeleton className="h-6 w-32 mb-1" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
               </CardContent>
               <CardFooter className="flex justify-end gap-2">
                 <Button type="button" variant="outline" disabled>Cancel</Button>
@@ -133,7 +144,7 @@ export default function EditProfilePage() {
     );
   }
   
-  if (!userProfile) { // Added check: if authenticated but profile still loading
+  if (!userProfile) {
     return (
        <AppLayout pageTitle="Edit Profile">
         <div className="container mx-auto py-8 flex justify-center">
@@ -160,7 +171,7 @@ export default function EditProfilePage() {
               Customize Your Hero Identity
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Update your hero name. Make it legendary!
+              Update your hero name and profile image. Make it legendary!
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -176,6 +187,24 @@ export default function EditProfilePage() {
                   required
                   disabled={isSaving}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customProfileImageUrl" className="text-md font-medium flex items-center">
+                  <ImageUp className="mr-2 h-5 w-5 text-muted-foreground" />
+                  Custom Profile Image URL
+                </Label>
+                <Input
+                  id="customProfileImageUrl"
+                  type="url"
+                  value={customProfileImageUrl}
+                  onChange={(e) => setCustomProfileImageUrl(e.target.value)}
+                  placeholder="https://example.com/your-image.png"
+                  className="text-lg"
+                  disabled={isSaving}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Paste a direct link to an image (e.g., .png, .jpg). Ensure the domain is whitelisted in app config if it's external.
+                </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">

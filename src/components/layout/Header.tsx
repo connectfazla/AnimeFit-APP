@@ -1,10 +1,10 @@
 
 "use client";
 import Link from 'next/link';
+import Image from 'next/image'; // Import Image
 import { UserCircle, Sun, Moon, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { APP_NAME } from '@/lib/constants';
-import { useSidebar } from '@/components/ui/sidebar'; 
+import { APP_NAME, APP_LOGO_URL } from '@/lib/constants'; // Import APP_LOGO_URL
 import { useTheme }  from '@/components/theme-provider';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type FirebaseUser } from '@/lib/firebase/authService';
@@ -18,7 +18,7 @@ export function Header({ pageTitle }: { pageTitle: string }) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const router = useRouter();
   const { toast } = useToast();
-  const isActualMobile = useIsMobile(); // Use the dedicated hook for mobile detection
+  const isActualMobile = useIsMobile();
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +56,15 @@ export function Header({ pageTitle }: { pageTitle: string }) {
            {!isActualMobile && (
              <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
            )}
+           {isActualMobile && (
+             <Image
+                src={APP_LOGO_URL}
+                alt={`${APP_NAME} logo`}
+                width={32}
+                height={32}
+                data-ai-hint="app logo"
+              />
+           )}
         </div>
          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" aria-label="Toggle theme (placeholder)">
@@ -77,7 +86,15 @@ export function Header({ pageTitle }: { pageTitle: string }) {
           <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
         )}
         {isActualMobile && (
-            <span className="font-headline text-xl font-semibold text-primary">{APP_NAME}</span>
+          <Link href="/" aria-label={`${APP_NAME} Home`}>
+            <Image
+              src={APP_LOGO_URL}
+              alt={`${APP_NAME} logo`}
+              width={36} // Slightly larger for mobile header
+              height={36}
+              data-ai-hint="app logo"
+            />
+          </Link>
         )}
       </div>
       <div className="flex items-center gap-2">

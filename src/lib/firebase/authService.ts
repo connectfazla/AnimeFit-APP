@@ -8,7 +8,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   type User as FirebaseUser,
-  updateProfile as updateUserProfileName,
+  updateProfile as firebaseUpdateProfile, // Renamed to avoid conflict
 } from 'firebase/auth';
 import { auth } from './config';
 import type { UserProfile } from '@/lib/types';
@@ -18,16 +18,22 @@ export type { FirebaseUser };
 
 const googleProvider = new GoogleAuthProvider();
 
+// Renamed from updateUserProfileName to avoid conflict with the new custom field
+export async function updateUserProfileFirebase(user: FirebaseUser, profileData: { displayName?: string | null; photoURL?: string | null; }): Promise<void> {
+  await firebaseUpdateProfile(user, profileData);
+}
+
+
 export async function signUpWithEmail(email: string, password: string, name: string): Promise<FirebaseUser> {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  await updateUserProfileName(userCredential.user, { displayName: name });
+  await firebaseUpdateProfile(userCredential.user, { displayName: name });
   
-  // Create and save user profile to local storage
   const newUserProfile: UserProfile = {
     ...DEFAULT_USER_PROFILE,
     id: userCredential.user.uid,
     name: name || userCredential.user.displayName || "Anime Hero",
-    selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId, // Or null
+    selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId,
+    customProfileImageUrl: null, // Initialize new field
   };
 
   if (typeof window !== 'undefined') {
@@ -48,7 +54,6 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
   const result = await signInWithPopup(auth, googleProvider);
   const user = result.user;
   
-  // Check if a profile exists for this Google user, if not, create one
   if (typeof window !== 'undefined') {
     let userProfile = JSON.parse(localStorage.getItem(`userProfile-${user.uid}`) || 'null') as UserProfile | null;
     if (!userProfile) {
@@ -56,11 +61,15 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
         ...DEFAULT_USER_PROFILE,
         id: user.uid,
         name: user.displayName || "Anime Hero",
-        selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId, // Or null
+        selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId,
+        customProfileImageUrl: user.photoURL || null, // Use Google photo if available, else null
       };
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
+    } else {
+      // If profile exists, ensure customProfileImageUrl is there, potentially updating from Google photo
+      userProfile.customProfileImageUrl = userProfile.customProfileImageUrl || user.photoURL || null;
+      localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     }
-    // Activate this profile
     localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(userProfile));
   }
   return user;
@@ -69,10 +78,7 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
 export async function signOut(): Promise<void> {
   await firebaseSignOut(auth);
   if (typeof window !== 'undefined') {
-    // Option 1: Clear the active profile
     localStorage.removeItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`);
-    // Option 2: Reset to default guest profile (if you have one)
-    // localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(DEFAULT_USER_PROFILE_GUEST_STATE_IF_ANY));
   }
 }
 
@@ -80,21 +86,30 @@ export function onAuthStateChanged(callback: (user: FirebaseUser | null) => void
   return firebaseOnAuthStateChanged(auth, callback);
 }
 
-// Helper to load user-specific profile and set it as active
 async function loadAndActivateUserProfile(user: FirebaseUser) {
   if (typeof window !== 'undefined') {
     let userProfile = JSON.parse(localStorage.getItem(`userProfile-${user.uid}`) || 'null') as UserProfile | null;
     
     if (!userProfile) {
-      // If no specific profile, create a default one for this UID
       userProfile = {
         ...DEFAULT_USER_PROFILE,
         id: user.uid,
-        name: user.displayName || "Anime Hero", // Use Firebase display name if available
+        name: user.displayName || "Anime Hero",
+        customProfileImageUrl: user.photoURL || null, // Initialize with Firebase photoURL if available
       };
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
+    } else {
+      // Ensure customProfileImageUrl is part of the loaded profile
+       if (userProfile.customProfileImageUrl === undefined) {
+         userProfile.customProfileImageUrl = user.photoURL || null;
+         localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
+       }
     }
-    // Set this loaded/created profile as the active one
     localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(userProfile));
   }
 }
+
+// This function was previously named updateUserProfileName
+// Keeping it specific for Firebase Auth profile update if needed separately from local UserProfile
+export { firebaseUpdateProfile as updateUserProfileName };
+

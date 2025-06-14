@@ -1,3 +1,4 @@
+
 "use client";
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -24,26 +25,40 @@ export function UserProfileCard({ userProfile }: UserProfileCardProps) {
     (char) => char.id === userProfile.selectedCharacterId
   );
 
+  const displayImageUrl = userProfile.customProfileImageUrl || selectedCharacter?.imageUrl;
+  const displayName = userProfile.name;
+  const displayAlt = userProfile.customProfileImageUrl ? `${displayName}'s custom profile picture` : selectedCharacter?.name || displayName;
+  const displayDataAiHint = userProfile.customProfileImageUrl ? "user profile" : selectedCharacter?.dataAiHint;
+
+
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm">
       <CardHeader className="text-center items-center">
-        {selectedCharacter ? (
+        {displayImageUrl ? (
           <Image
-            src={selectedCharacter.imageUrl}
-            alt={selectedCharacter.name}
+            // It's important that any user-provided URL for customProfileImageUrl
+            // is from a hostname whitelisted in next.config.js
+            // Or, consider using a standard img tag if hostnames are too variable,
+            // but you'd lose next/image optimizations.
+            src={displayImageUrl}
+            alt={displayAlt}
             width={128}
             height={128}
             className="rounded-full object-cover border-4 border-primary shadow-lg mx-auto"
-            data-ai-hint={selectedCharacter.dataAiHint}
+            data-ai-hint={displayDataAiHint || "character avatar"}
+            // Add error handling for external images if necessary
+            // onError={(e) => { e.currentTarget.src = '/default-avatar.png'; }} // Example fallback
           />
         ) : (
           <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center mx-auto border-4 border-primary shadow-lg">
             <User className="w-16 h-16 text-muted-foreground" />
           </div>
         )}
-        <CardTitle className="font-headline text-3xl mt-4 text-primary">{userProfile.name}</CardTitle>
+        <CardTitle className="font-headline text-3xl mt-4 text-primary">{displayName}</CardTitle>
         <CardDescription className="text-md text-muted-foreground">
-          {selectedCharacter ? `Training as ${selectedCharacter.name}` : 'Ready to choose a hero!'}
+          {userProfile.customProfileImageUrl 
+            ? (selectedCharacter ? `Also inspired by ${selectedCharacter.name}` : "Hero in training")
+            : (selectedCharacter ? `Training as ${selectedCharacter.name}` : 'Ready to choose a hero!')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 px-6">
