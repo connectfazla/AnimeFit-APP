@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
-  manifest: '/site.webmanifest',
+  manifest: '/site.webmanifest', // Ensure this file exists in public/
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -51,8 +51,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/favicon.ico', // This references public/favicon.ico
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png', // This references public/apple-touch-icon.png
+    shortcut: '/favicon.ico', // Ensure this file exists in public/
+    apple: '/apple-touch-icon.png', // This references public/apple-touch-icon.png - Ensure this exists
     // other: [ // Example for different sizes
     //   { rel: 'icon', url: '/favicon-16x16.png', sizes: '16x16' },
     //   { rel: 'icon', url: '/favicon-32x32.png', sizes: '32x32' },

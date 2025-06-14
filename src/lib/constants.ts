@@ -20,9 +20,10 @@ const createExerciseIntensity = (normal: IntensityConfig, easyMultiplier: number
   };
   
   const applyDurationMultiplier = (durationStr: string | undefined, multiplier: number): string | undefined => {
-    if (!durationStr || !durationStr.endsWith('s')) return durationStr;
+    if (!durationStr || !durationStr.endsWith('s')) return durationStr; // Only apply to seconds-based durations
     const seconds = parseInt(durationStr.slice(0, -1));
     if (isNaN(seconds)) return durationStr;
+    // Ensure a minimum duration, e.g., 60 seconds for cardio-like activities
     return `${Math.max(60, Math.round(seconds * multiplier))}s`; 
   };
 
@@ -31,14 +32,17 @@ const createExerciseIntensity = (normal: IntensityConfig, easyMultiplier: number
       reps: applyMultiplier(normal.reps, easyMultiplier),
       sets: normal.sets ? Math.max(1, Math.round(normal.sets * easyMultiplier)) : normal.sets,
       duration: applyDurationMultiplier(normal.duration, easyMultiplier),
-      descriptionSuffix: normal.reps || normal.duration ? "(Focus on form and control)" : "",
+      descriptionSuffix: normal.reps || normal.duration ? "(Lighter effort, focus on perfect form)" : " (Gentle pace)",
     },
-    normal: normal,
+    normal: {
+      ...normal,
+      descriptionSuffix: normal.descriptionSuffix || "(Standard intensity, challenge yourself)",
+    },
     hard: {
       reps: applyMultiplier(normal.reps, hardMultiplier),
       sets: normal.sets ? Math.max(1, Math.round(normal.sets * hardMultiplier)) : normal.sets,
       duration: applyDurationMultiplier(normal.duration, hardMultiplier),
-      descriptionSuffix: normal.reps || normal.duration ? "(Push your limits!)" : "",
+      descriptionSuffix: normal.reps || normal.duration ? "(Maximal effort, push your limits!)" : " (High intensity!)",
     }
   };
 };
@@ -46,39 +50,39 @@ const createExerciseIntensity = (normal: IntensityConfig, easyMultiplier: number
 export const EXERCISES: Exercise[] = [
   { 
     id: 'benchpress', name: 'Herculean Bench Press', 
-    description: 'Forge a chest of steel with this classic compound lift using a barbell.', 
+    description: 'Build chest power with this classic lift. Lie on a bench, lower the barbell to your chest, and press it back up.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/SCVCLChPQFY', 
-    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) 
+    intensity: createExerciseIntensity({ sets: 3, reps: 8, descriptionSuffix: "(Compound chest builder)" }) 
   },
   { 
     id: 'barbellrows', name: 'Dragon Back Rows', 
-    description: 'Sculpt a powerful back worthy of a mythical beast with barbell rows.', 
+    description: 'Develop a strong back. Hinge at your hips, keep your back straight, and pull the barbell towards your lower chest.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/G8l_8chR5BE', 
-    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) 
+    intensity: createExerciseIntensity({ sets: 3, reps: 10, descriptionSuffix: "(Strengthens entire back)" }) 
   },
   { 
     id: 'overheadpress', name: 'Celestial Shoulder Press', 
-    description: 'Raise your power level with this shoulder-defining press (dumbbells or barbell).', 
+    description: 'Build powerful shoulders. Stand or sit, and press dumbbells or a barbell overhead until your arms are straight.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/B-aVuyhvLHU', 
-    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) 
+    intensity: createExerciseIntensity({ sets: 3, reps: 10, descriptionSuffix: "(For strong, defined shoulders)" }) 
   },
   { 
     id: 'barbellsquats', name: 'Colossal Titan Squats', 
-    description: 'Build legs that can withstand any onslaught with heavy barbell squats.', 
+    description: 'The king of leg exercises. With a barbell on your upper back, squat down as if sitting in a chair, keeping your chest up.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/Uv_DKDl7EjA', 
-    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) 
+    intensity: createExerciseIntensity({ sets: 3, reps: 8, descriptionSuffix: "(Full body power and leg strength)" }) 
   },
   { 
     id: 'deadlifts', name: 'Earthshaker Deadlifts', 
-    description: 'Channel the planet\'s might with this ultimate test of strength (conventional deadlift).', 
+    description: 'A true test of total body strength. Lift a barbell from the floor by extending your hips and knees, keeping a flat back.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/ytGaGIn3SjE', 
-    intensity: createExerciseIntensity({ sets: 1, reps: 5 }) 
+    intensity: createExerciseIntensity({ sets: 1, reps: 5, descriptionSuffix: "(Ultimate strength builder - focus on form!)" }) 
   },
   { 
     id: 'stationarybike', name: 'Infinite Stamina Cycle', 
-    description: 'Boost your endurance with high-intensity intervals or a steady state ride on a stationary bike.', 
+    description: 'Boost your cardiovascular endurance. Ride a stationary bike, varying your pace for intervals or maintaining a steady effort.', 
     videoTutorialUrl: 'https://www.youtube.com/embed/Xm13J4u6MhQ', 
-    intensity: createExerciseIntensity({ duration: "900s" }, 0.66, 1.33) 
+    intensity: createExerciseIntensity({ duration: "900s", descriptionSuffix: "(Great for cardio and endurance)" }, 0.66, 1.33) 
   },
 ];
 

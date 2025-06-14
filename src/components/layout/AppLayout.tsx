@@ -24,10 +24,12 @@ interface AppLayoutProps {
 function MainContent({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
   return (
-    <main className={cn(
-      "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8",
-      isMobile && "pb-20" 
-    )}>
+    <main 
+      className={cn(
+        "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8",
+        isMobile && "pb-[calc(5rem+env(safe-area-inset-bottom))]" // Adjust padding for bottom nav and safe area
+      )}
+    >
       {children}
     </main>
   );
@@ -37,14 +39,16 @@ function ReminderHandler() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const unsubscribe = onAuthStateChanged(setCurrentUser);
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!currentUser || !userProfile || !userProfile.reminderTime) {
+    if (!isClient || !currentUser || !userProfile || !userProfile.reminderTime) {
       return;
     }
 
@@ -52,11 +56,13 @@ function ReminderHandler() {
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
       
+      // Check if reminder for today was already dismissed
       if (userProfile.lastReminderDismissedDate === todayStr) {
         return; 
       }
 
       const [hours, minutes] = userProfile.reminderTime!.split(':').map(Number);
+      // Reminder time is based on user's device local time
       const reminderDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
 
       if (now.getHours() === reminderDateTime.getHours() && now.getMinutes() === reminderDateTime.getMinutes()) {
@@ -67,9 +73,10 @@ function ReminderHandler() {
               Workout Reminder!
             </div>
           ),
-          description: `Time for your training session, ${userProfile.name}! Let's go!`,
+          description: `Time for your training session, ${userProfile.name}! Let's go! (This is an in-app reminder based on your device time.)`,
           duration: 10000, // 10 seconds
         });
+        // Mark reminder as shown for today to prevent re-showing every minute
         setUserProfile(prev => prev ? { ...prev, lastReminderDismissedDate: todayStr } : null);
       }
     };
@@ -79,7 +86,7 @@ function ReminderHandler() {
     const intervalId = setInterval(checkReminder, 60000); // Check every minute
 
     return () => clearInterval(intervalId);
-  }, [userProfile, setUserProfile, toast, currentUser]);
+  }, [isClient, userProfile, setUserProfile, toast, currentUser]);
 
   return null; // This component does not render anything visible
 }
