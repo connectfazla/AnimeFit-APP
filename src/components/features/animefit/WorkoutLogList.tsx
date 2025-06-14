@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { WorkoutCompletionModal } from './WorkoutCompletionModal';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
-import { Dumbbell, CheckCircle2, Sparkles, HelpCircle, Zap, Shield, Brain, Clock, ChevronsUp, ChevronsDown } from 'lucide-react';
+import { Dumbbell, CheckCircle2, Sparkles, HelpCircle, Zap, Shield, Brain, Clock, ChevronsUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,13 @@ const difficultyButtonConfig: Record<DifficultyLevel, { text: string, icon: Reac
   normal: { text: "Standard Power Drill", icon: Brain, variant: "default" },
   hard: { text: "Limit Break Mode!", icon: Zap, variant: "outline" },
 };
+
+const currentDifficultyButtonConfig: Record<DifficultyLevel, { text: string, icon: React.ElementType }> = {
+  easy: { text: "Relaxed Recalibration", icon: Shield },
+  normal: { text: "Standard Power Drill", icon: Brain },
+  hard: { text: "Limit Break Mode!", icon: Zap },
+};
+
 
 export function WorkoutLogList() {
   const today = new Date().toISOString().split('T')[0];
@@ -66,11 +73,10 @@ export function WorkoutLogList() {
       setCurrentLog(logForToday);
       setCurrentDifficulty(logForToday.difficulty || 'normal');
       if (logForToday.workoutCompleted && logForToday.duration) {
-         // If workout was completed and page reloaded, don't restart timer
         setWorkoutActive(false);
       }
        if (logForToday.extraQuestCompleted) {
-        setExtraQuestActive(false); // extra quest button should be disabled
+        setExtraQuestActive(false); 
       }
     }
   }, [isClient, today, dailyLogs, getInitialLogState]);
@@ -86,7 +92,7 @@ export function WorkoutLogList() {
     }
     setWorkoutStartTime(new Date());
     setWorkoutActive(true);
-    setCurrentLog(prev => ({ ...prev, completedExerciseIds: [] })); // Reset exercises if restarting
+    setCurrentLog(prev => ({ ...prev, completedExerciseIds: [] , workoutCompleted: false, extraQuestCompleted: false, duration: undefined})); 
     toast({ title: "Training Session Initiated!", description: "Let's get stronger, hero!"});
   };
   
@@ -96,7 +102,7 @@ export function WorkoutLogList() {
         return;
     }
     setCurrentDifficulty(difficulty);
-    setCurrentLog(prev => ({...prev, difficulty: difficulty, completedExerciseIds: [] })); // Reset completed if difficulty changes
+    setCurrentLog(prev => ({...prev, difficulty: difficulty, completedExerciseIds: [] })); 
     toast({ title: "Difficulty Set!", description: `Training protocol adjusted to: ${difficultyButtonConfig[difficulty].text}`});
   };
 
@@ -111,8 +117,8 @@ export function WorkoutLogList() {
           <CardDescription className="text-muted-foreground">Loading workout details...</CardDescription>
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-10 w-full mb-4" /> {/* Difficulty buttons placeholder */}
-          <Skeleton className="h-12 w-full mb-6" /> {/* Start workout button placeholder */}
+          <Skeleton className="h-10 w-full mb-4" /> 
+          <Skeleton className="h-12 w-full mb-6" /> 
           <div className="space-y-2">
             <Skeleton className="h-4 w-1/3 mb-1" />
             <Skeleton className="h-3 w-full" />
@@ -197,9 +203,10 @@ export function WorkoutLogList() {
         const diffTime = todayDate.getTime() - lastWorkoutDate.getTime();
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays === 1) newStreak++;
-        else if (diffDays > 1) newStreak = 1;
+        else if (diffDays > 1) newStreak = 1; // Reset streak if more than 1 day missed
+        // If diffDays is 0 (same day) or negative (error?), streak remains unchanged.
     } else {
-        newStreak = 1;
+        newStreak = 1; // First workout
     }
     
     const workoutEndTime = new Date();
@@ -270,7 +277,7 @@ export function WorkoutLogList() {
     const finalLog: DailyLog = { ...currentLog, extraQuestCompleted: true };
     setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog }));
     setCurrentLog(finalLog);
-    setExtraQuestActive(false); // Visually disable button
+    setExtraQuestActive(false); 
 
     toast({
       title: "ULTRA QUEST COMPLETE!",
@@ -416,7 +423,7 @@ export function WorkoutLogList() {
               className="w-full font-headline text-lg bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white hover:opacity-90 animate-pulse"
               disabled={!userProfile || currentLog.extraQuestCompleted}
             >
-              <ChevronsUp className="mr-2 h-6 w-6" /> UNLOCK HYPER-QUEST! (+{XP_EXTRA_QUEST_BONUS * XP_DIFFICULTY_MULTIPLIERS[currentDifficulty]} XP)
+              <ChevronsUp className="mr-2 h-6 w-6" /> UNLOCK HYPER-QUEST! (+{(XP_EXTRA_QUEST_BONUS * XP_DIFFICULTY_MULTIPLIERS[currentDifficulty]).toFixed(0)} XP)
             </Button>
           )}
           {currentLog.workoutCompleted && currentLog.extraQuestCompleted && (
@@ -433,27 +440,29 @@ export function WorkoutLogList() {
           <DialogHeader>
             <DialogTitle className="font-headline text-primary">{helpExercise?.name}</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <p className="text-sm text-foreground">{helpExercise?.description} {getExerciseDetails(helpExercise!)?.descriptionSuffix}</p>
-            {(getExerciseDetails(helpExercise!)?.sets && getExerciseDetails(helpExercise!)?.reps) && 
-              <p className="text-sm text-muted-foreground">Recommended ({currentDifficulty}): {getExerciseDetails(helpExercise!)?.sets} sets of {getExerciseDetails(helpExercise!)?.reps} reps.</p>
-            }
-            {getExerciseDetails(helpExercise!)?.duration &&
-              <p className="text-sm text-muted-foreground">Recommended duration ({currentDifficulty}): {getExerciseDetails(helpExercise!)?.duration}.</p>
-            }
-            {helpExercise?.videoTutorialUrl && (
-              <div className="aspect-video w-full">
-                <iframe
-                  src={helpExercise.videoTutorialUrl}
-                  title={`${helpExercise.name} Tutorial`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="w-full h-full rounded-md"
-                ></iframe>
-              </div>
-            )}
-          </div>
+          {helpExercise && (
+            <div className="py-4 space-y-4">
+              <p className="text-sm text-foreground">{helpExercise.description} {getExerciseDetails(helpExercise)?.descriptionSuffix}</p>
+              {(getExerciseDetails(helpExercise)?.sets && getExerciseDetails(helpExercise)?.reps) && 
+                <p className="text-sm text-muted-foreground">Recommended ({currentDifficulty}): {getExerciseDetails(helpExercise).sets} sets of {getExerciseDetails(helpExercise).reps} reps.</p>
+              }
+              {getExerciseDetails(helpExercise)?.duration &&
+                <p className="text-sm text-muted-foreground">Recommended duration ({currentDifficulty}): {getExerciseDetails(helpExercise).duration}.</p>
+              }
+              {helpExercise.videoTutorialUrl && (
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={helpExercise.videoTutorialUrl}
+                    title={`${helpExercise.name} Tutorial`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full rounded-md"
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
