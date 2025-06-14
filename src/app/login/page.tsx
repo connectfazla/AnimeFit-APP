@@ -2,18 +2,20 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Label is used in the example, ensuring it's available
+import { Label } from '@/components/ui/label'; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmail, signInWithGoogle, onAuthStateChanged } from '@/lib/firebase/authService';
 import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react';
+import { APP_NAME } from '@/lib/constants';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -32,7 +34,7 @@ export default function LoginPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
-        router.push('/'); // Redirect to dashboard if already logged in
+        router.push('/'); 
       }
       setAuthLoading(false);
     });
@@ -92,8 +94,16 @@ export default function LoginPage() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
         <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <LogIn className="mx-auto h-12 w-12 text-primary animate-pulse" />
-            <CardTitle className="font-headline text-3xl mt-4">Loading...</CardTitle>
+             <Image
+                src="/logo.png"
+                alt={`${APP_NAME} logo`}
+                width={64}
+                height={64}
+                className="mx-auto mb-4"
+                data-ai-hint="app logo"
+              />
+            <LogIn className="mx-auto h-10 w-10 text-primary animate-pulse" />
+            <CardTitle className="font-headline text-3xl mt-2">Loading...</CardTitle>
             <CardDescription>Checking your session...</CardDescription>
           </CardHeader>
         </Card>
@@ -105,8 +115,16 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
         <CardHeader className="text-center">
-          <LogIn className="mx-auto h-12 w-12 text-primary" />
-          <CardTitle className="font-headline text-3xl mt-4">Hero Login</CardTitle>
+          <Link href="/" className="mb-6 inline-block">
+            <Image
+              src="/logo.png"
+              alt={`${APP_NAME} logo`}
+              width={80}
+              height={80}
+              data-ai-hint="app logo"
+            />
+          </Link>
+          <CardTitle className="font-headline text-3xl text-primary">Hero Login</CardTitle>
           <CardDescription>Access your training dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
