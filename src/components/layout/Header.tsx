@@ -1,24 +1,24 @@
 
 "use client";
 import Link from 'next/link';
-import { UserCircle, Sun, Moon, LogIn, LogOut, Menu } from 'lucide-react'; // Menu might be removed or kept for other purposes
+import { UserCircle, Sun, Moon, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { APP_NAME } from '@/lib/constants';
-import { useSidebar } from '@/components/ui/sidebar'; // This context provides isMobile and toggleSidebar
+import { useSidebar } from '@/components/ui/sidebar'; 
 import { useTheme }  from '@/components/theme-provider';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type FirebaseUser } from '@/lib/firebase/authService';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-// import { useIsMobile } from '@/hooks/use-mobile'; // Can use this if not relying on useSidebar for isMobile
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function Header({ pageTitle }: { pageTitle: string }) {
-  const { toggleSidebar, isMobile: isMobileFromSidebarContext } = useSidebar(); // isMobile here is from sidebar context
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const isActualMobile = useIsMobile(); // Use the dedicated hook for mobile detection
 
   useEffect(() => {
     setMounted(true);
@@ -52,9 +52,10 @@ export function Header({ pageTitle }: { pageTitle: string }) {
   if (!mounted) {
     return (
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 shadow-sm">
-        {/* Placeholder for mobile menu button - it won't be visible here anyway due to isMobileFromSidebarContext being initially false server-side if based on hook */}
         <div className="flex-1">
-          <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
+           {!isActualMobile && (
+             <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
+           )}
         </div>
          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" aria-label="Toggle theme (placeholder)">
@@ -71,18 +72,13 @@ export function Header({ pageTitle }: { pageTitle: string }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 shadow-sm">
-      {/* Hamburger menu is removed for mobile as BottomNav will be primary. 
-          Desktop sidebar is not triggered by this header menu.
-          If a hamburger menu is desired on mobile for *secondary* actions, 
-          it would need a different implementation/purpose.
-      */}
-      {/* {isMobileFromSidebarContext && (
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden" aria-label="Toggle Menu">
-          <Menu className="h-6 w-6" />
-        </Button>
-      )} */}
       <div className="flex-1">
-        <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
+        {!isActualMobile && (
+          <h1 className="font-headline text-xl md:text-2xl font-semibold text-primary">{pageTitle || APP_NAME}</h1>
+        )}
+        {isActualMobile && (
+            <span className="font-headline text-xl font-semibold text-primary">{APP_NAME}</span>
+        )}
       </div>
       <div className="flex items-center gap-2">
          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
@@ -121,4 +117,3 @@ export function Header({ pageTitle }: { pageTitle: string }) {
     </header>
   );
 }
-

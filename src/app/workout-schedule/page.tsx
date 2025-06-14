@@ -2,22 +2,24 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged } from '@/lib/firebase/authService';
+import { onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DayOfWeekSelector } from '@/components/features/animefit/DayOfWeekSelector';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { CalendarCheck } from 'lucide-react';
 
 export default function WorkoutSchedulePage() {
   const router = useRouter();
   const [authLoading, setAuthLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
-        setIsAuthenticated(true);
+        setCurrentUser(user);
       } else {
         router.push('/login');
       }
@@ -26,7 +28,7 @@ export default function WorkoutSchedulePage() {
     return () => unsubscribe();
   }, [router]);
 
-  if (authLoading) {
+  if (authLoading || !isClient) {
     return (
       <AppLayout pageTitle="Workout Schedule">
         <div className="container mx-auto py-8">
@@ -36,16 +38,21 @@ export default function WorkoutSchedulePage() {
                 <CalendarCheck className="mr-2 h-7 w-7" />
                 Loading Schedule...
               </CardTitle>
-              <CardDescription className="text-muted-foreground">Checking authentication...</CardDescription>
+              <CardDescription className="text-muted-foreground">
+                 {authLoading ? 'Checking permissions...' : 'Fetching your schedule settings...'}
+              </CardDescription>
             </CardHeader>
-            <Skeleton className="h-48 w-full" />
+            <CardContent>
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-12 w-full mt-4" />
+            </CardContent>
           </Card>
         </div>
       </AppLayout>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!currentUser) {
      return (
        <AppLayout pageTitle="Redirecting...">
         <div className="flex min-h-screen items-center justify-center">

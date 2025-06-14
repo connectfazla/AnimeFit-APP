@@ -97,7 +97,7 @@ export default function SignupPage() {
         <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
           <CardHeader className="text-center">
             <Image
-              src="/animefit.svg"
+              src="/ANIMEFIT.svg"
               alt={`${APP_NAME} loading logo`}
               width={64}
               height={64}
@@ -119,7 +119,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
            <Link href="/" className="mb-6 inline-block">
             <Image
-              src="/animefit.svg"
+              src="/ANIMEFIT.svg"
               alt={`${APP_NAME} logo`}
               width={80}
               height={80}

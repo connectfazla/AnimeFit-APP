@@ -61,7 +61,7 @@ export function SidebarNav() {
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/animefit.svg"
+            src="/ANIMEFIT.svg"
             alt={`${APP_NAME} logo`}
             width={32}
             height={32}
@@ -74,7 +74,6 @@ export function SidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {/* Always show main nav items; page-level auth will handle redirection */}
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>

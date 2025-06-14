@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CharacterSelectionGrid() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
@@ -21,11 +22,13 @@ export function CharacterSelectionGrid() {
   }, []);
 
   useEffect(() => {
-    if (isClient && userProfile) {
-      setSelectedCharacterId(userProfile.selectedCharacterId);
-    } else if (isClient && !userProfile) {
-      // Initialize default profile if none exists when client loads
-      setUserProfile(DEFAULT_USER_PROFILE);
+    if (isClient) {
+      if (userProfile) {
+        setSelectedCharacterId(userProfile.selectedCharacterId);
+      } else {
+        setUserProfile(DEFAULT_USER_PROFILE);
+        setSelectedCharacterId(DEFAULT_USER_PROFILE.selectedCharacterId);
+      }
     }
   }, [isClient, userProfile, setUserProfile]);
 
@@ -54,10 +57,15 @@ export function CharacterSelectionGrid() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, index) => (
+          {[...Array(CHARACTERS.length || 4)].map((_, index) => (
             <Card key={index} className="w-full shadow-lg">
-              <CardContent className="p-4 aspect-[3/4] flex items-center justify-center">
-                <p className="text-muted-foreground">Loading...</p>
+              <Skeleton className="aspect-[3/4] w-full rounded-t-lg" />
+              <CardContent className="p-4">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-full mb-1" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2 mt-2 mb-3" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
           ))}

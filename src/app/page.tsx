@@ -13,7 +13,8 @@ import { LevelIndicator } from '@/components/features/animefit/LevelIndicator';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID, CHARACTERS } from '@/lib/constants';
 import type { UserProfile, AnimeCharacter, DailyLog } from '@/lib/types';
-import { ArrowRight, BarChartBig, Users, CalendarPlus, TrendingUp } from 'lucide-react';
+import { ArrowRight, BarChartBig, Users, CalendarPlus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
+    setIsClient(true); // Set client flag on mount
     const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
         setCurrentUser(user);
@@ -35,35 +37,37 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
+  // Initialize profile if it doesn't exist and client has mounted and auth state is resolved
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Initialize profile if it doesn't exist and client has mounted
-  useEffect(() => {
-    if (isClient && currentUser && !userProfile) {
-      // Attempt to load user-specific profile first
-      const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
-      const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
-      if (storedUserProfile) {
-        setUserProfile(JSON.parse(storedUserProfile));
-      } else {
-        // Fallback to creating/setting default profile if no specific one found
-        const defaultProfileForUser: UserProfile = {
-            ...DEFAULT_USER_PROFILE,
-            id: currentUser.uid, // Ensure ID matches Firebase UID
-            name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
-        };
-        setUserProfile(defaultProfileForUser);
-        localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
-        localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(defaultProfileForUser));
+    if (isClient && !authLoading) { // Ensure auth state is resolved before profile logic
+      if (currentUser) {
+        // User is authenticated, ensure their profile is active
+        const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
+        const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
+        if (storedUserProfile) {
+          const loadedProfile = JSON.parse(storedUserProfile);
+          // Check if the active profile ID matches, otherwise update it
+          if (userProfile?.id !== currentUser.uid) {
+            setUserProfile(loadedProfile);
+          } else if (!userProfile) { // If active profile is null, set it
+            setUserProfile(loadedProfile);
+          }
+        } else {
+          // No specific profile found, create and set a default one for this user
+          const defaultProfileForUser: UserProfile = {
+              ...DEFAULT_USER_PROFILE,
+              id: currentUser.uid,
+              name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+          };
+          setUserProfile(defaultProfileForUser);
+          localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
+        }
+      } else if (!currentUser && !userProfile) { 
+        // No authenticated user and no active profile, set default (should be rare due to redirect)
+        setUserProfile(DEFAULT_USER_PROFILE);
       }
-    } else if (isClient && !currentUser && !userProfile) {
-      // If no current user but also no generic profile, set the default generic one.
-      // This case might be less common if auth redirects quickly.
-      setUserProfile(DEFAULT_USER_PROFILE);
     }
-  }, [isClient, userProfile, setUserProfile, currentUser]);
+  }, [isClient, authLoading, currentUser, userProfile, setUserProfile]);
 
   const selectedCharacter: AnimeCharacter | undefined =
     (isClient && userProfile)
@@ -83,18 +87,26 @@ export default function DashboardPage() {
                 Please wait while we prepare your hero stats!
               </CardDescription>
             </CardHeader>
+            <CardContent>
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
           </Card>
-          {/* Simplified loading state for other components */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <Skeleton className="h-64 w-full" />
         </div>
       </AppLayout>
     );
   }
-
+  
+  // After auth check, if userProfile is still null, it means something is wrong or still loading
   if (!userProfile) {
     return (
       <AppLayout pageTitle="Dashboard">
         <div className="flex items-center justify-center h-full">
-          <p className="text-xl text-muted-foreground">Loading your profile...</p>
+          <p className="text-xl text-muted-foreground">Initializing your profile...</p>
         </div>
       </AppLayout>
     );

@@ -13,7 +13,7 @@ import { WorkoutCompletionModal } from './WorkoutCompletionModal';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Dumbbell, CheckCircle2, Sparkles, HelpCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Removed DialogTrigger, DialogDescription as they aren't used for help dialog
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function WorkoutLogList() {
   const today = new Date().toISOString().split('T')[0];
@@ -22,6 +22,7 @@ export function WorkoutLogList() {
   const [isClient, setIsClient] = useState(false);
   
   const initialLogState = { date: today, completedExerciseIds: [], workoutCompleted: false };
+  // Initialize currentLog with initialLogState directly. It will be updated by useEffect.
   const [currentLog, setCurrentLog] = useState<DailyLog>(initialLogState);
   
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -36,10 +37,15 @@ export function WorkoutLogList() {
 
   useEffect(() => {
     if (isClient) {
+      // Ensure userProfile is initialized if null
       if (!userProfile) {
         setUserProfile(DEFAULT_USER_PROFILE);
+        // If userProfile was null and just got set, dailyLogs might also need re-evaluation for currentLog
+        setCurrentLog(dailyLogs[today] || initialLogState);
+      } else {
+        // userProfile is available, set currentLog
+        setCurrentLog(dailyLogs[today] || initialLogState);
       }
-      setCurrentLog(dailyLogs[today] || initialLogState);
     }
   }, [isClient, today, dailyLogs, userProfile, setUserProfile, initialLogState]);
 
@@ -52,7 +58,7 @@ export function WorkoutLogList() {
             <Dumbbell className="mr-2 h-7 w-7" />
             {workout?.name || "Today's Challenge"} - {new Date(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
           </CardTitle>
-          <CardDescription className="text-muted-foreground">Loading workout...</CardDescription>
+          <CardDescription className="text-muted-foreground">Loading workout details...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -69,7 +75,6 @@ export function WorkoutLogList() {
     );
   }
 
-
   const handleToggleExercise = (exerciseId: string) => {
     if (currentLog.workoutCompleted) return; 
 
@@ -82,6 +87,10 @@ export function WorkoutLogList() {
   };
 
   const handleFinishWorkout = () => {
+    if (!userProfile) { // Explicit guard
+      toast({ title: "Error", description: "User profile not loaded. Please try again.", variant: "destructive" });
+      return;
+    }
     if (currentLog.workoutCompleted) {
       toast({ title: "Already Completed!", description: "You've already logged this workout for today." });
       return;
@@ -184,7 +193,7 @@ export function WorkoutLogList() {
         <CardFooter>
           <Button 
             onClick={handleFinishWorkout} 
-            disabled={currentLog.workoutCompleted || currentLog.completedExerciseIds.length === 0} 
+            disabled={currentLog.workoutCompleted || currentLog.completedExerciseIds.length === 0 || !userProfile} 
             size="lg" 
             className="w-full font-headline text-lg"
           >
@@ -218,14 +227,14 @@ export function WorkoutLogList() {
         </DialogContent>
       </Dialog>
 
-      <WorkoutCompletionModal
+      {userProfile && <WorkoutCompletionModal
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}
         characterName={CHARACTERS.find(c => c.id === userProfile.selectedCharacterId)?.name}
         xpEarned={modalData.xpEarned}
         levelledUp={modalData.levelledUp}
         newLevel={modalData.newLevel}
-      />
+      />}
     </>
   );
 }
