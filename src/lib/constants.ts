@@ -23,62 +23,62 @@ const createExerciseIntensity = (normal: IntensityConfig, easyMultiplier: number
     if (!durationStr || !durationStr.endsWith('s')) return durationStr;
     const seconds = parseInt(durationStr.slice(0, -1));
     if (isNaN(seconds)) return durationStr;
-    return `${Math.max(10, Math.round(seconds * multiplier))}s`; // Ensure minimum 10s
+    return `${Math.max(60, Math.round(seconds * multiplier))}s`; // Ensure minimum 60s for duration
   };
 
   return {
     easy: {
       reps: applyMultiplier(normal.reps, easyMultiplier),
-      sets: applyMultiplier(normal.sets, easyMultiplier) || normal.sets, // if sets are few, keep them same for easy
+      sets: normal.sets ? Math.max(1, Math.round(normal.sets * easyMultiplier)) : normal.sets,
       duration: applyDurationMultiplier(normal.duration, easyMultiplier),
-      descriptionSuffix: normal.reps || normal.duration ? "(Focus on form)" : "",
+      descriptionSuffix: normal.reps || normal.duration ? "(Focus on form and control)" : "",
     },
     normal: normal,
     hard: {
       reps: applyMultiplier(normal.reps, hardMultiplier),
-      sets: applyMultiplier(normal.sets, hardMultiplier) || normal.sets, // if sets are few, hard might increase them slightly or keep
+      sets: normal.sets ? Math.max(1, Math.round(normal.sets * hardMultiplier)) : normal.sets,
       duration: applyDurationMultiplier(normal.duration, hardMultiplier),
-      descriptionSuffix: normal.reps || normal.duration ? "(Max Power!)" : "",
+      descriptionSuffix: normal.reps || normal.duration ? "(Push your limits!)" : "",
     }
   };
 };
 
 export const EXERCISES: Exercise[] = [
   { 
-    id: 'pushups', name: 'Saiyan Push-ups', 
-    description: 'Explosive push-ups to build upper body strength.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/IODxDxX7oi4',
-    intensity: createExerciseIntensity({ sets: 3, reps: 15 })
+    id: 'benchpress', name: 'Herculean Bench Press', 
+    description: 'Forge a chest of steel with this classic compound lift using a barbell.', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/SCVCLChPQFY', // Example: ScottHermanFitness - How To: Barbell Bench Press
+    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) // Normal: 3 sets of 8 reps
   },
   { 
-    id: 'squats', name: 'Ninja Squats', 
-    description: 'Deep squats for leg power and agility.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/aclHkVg7PL8',
-    intensity: createExerciseIntensity({ sets: 3, reps: 20 })
+    id: 'barbellrows', name: 'Dragon Back Rows', 
+    description: 'Sculpt a powerful back worthy of a mythical beast with barbell rows.', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/G8l_8chR5BE', // Example: Alan Thrall - How to Barbell Row with Correct Form
+    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) // Normal: 3 sets of 10 reps
   },
   { 
-    id: 'plank', name: 'Titan Plank', 
-    description: 'Hold a rock-solid plank like a true defender.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/ASdvN_XEl_c',
-    intensity: createExerciseIntensity({ duration: "60s" }, 0.75, 1.5) // Custom multipliers for plank
+    id: 'overheadpress', name: 'Celestial Shoulder Press', 
+    description: 'Raise your power level with this shoulder-defining press (dumbbells or barbell).', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/B-aVuyhvLHU', // Example: Jeff Nippard - The Smartest Way To Overhead Press
+    intensity: createExerciseIntensity({ sets: 3, reps: 10 }) // Normal: 3 sets of 10 reps
   },
   { 
-    id: 'jumpingjacks', name: 'Flash Step Jacks', 
-    description: 'Rapid jumping jacks for speed and endurance.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/c4DAnQ6DtF8',
-    intensity: createExerciseIntensity({ duration: "120s" })
+    id: 'barbellsquats', name: 'Colossal Titan Squats', 
+    description: 'Build legs that can withstand any onslaught with heavy barbell squats.', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/Uv_DKDl7EjA', // Example: Squat University - How To SQUAT With Perfect Form
+    intensity: createExerciseIntensity({ sets: 3, reps: 8 }) // Normal: 3 sets of 8 reps
   },
   { 
-    id: 'burpees', name: 'One-Punch Burpees', 
-    description: 'Full-body explosive movement.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/auKl9A2iWcE',
-    intensity: createExerciseIntensity({ sets: 3, reps: 10 })
+    id: 'deadlifts', name: 'Earthshaker Deadlifts', 
+    description: 'Channel the planet\'s might with this ultimate test of strength (conventional deadlift).', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/ytGaGIn3SjE', // Example: Alan Thrall - How To Deadlift: Starting Strength 5 Step Deadlift
+    intensity: createExerciseIntensity({ sets: 1, reps: 5 }) // Normal: 1 set of 5 reps (common for heavy deadlifts)
   },
   { 
-    id: 'running', name: 'Gear Second Run', 
-    description: 'High-intensity interval running or focus on proper form.', 
-    videoTutorialUrl: 'https://www.youtube.com/embed/wRkeBVMQSgg',
-    intensity: createExerciseIntensity({ duration: "300s" }, 0.6, 1.2) // Different multipliers for running
+    id: 'stationarybike', name: 'Infinite Stamina Cycle', 
+    description: 'Boost your endurance with high-intensity intervals or a steady state ride on a stationary bike.', 
+    videoTutorialUrl: 'https://www.youtube.com/embed/Xm13J4u6MhQ', // Example: GCN - HIIT On A Static Bike
+    intensity: createExerciseIntensity({ duration: "900s" }, 0.66, 1.33) // Normal: 15 min, Easy: ~10 min, Hard: ~20 min
   },
 ];
 
@@ -119,3 +119,4 @@ export const XP_DIFFICULTY_MULTIPLIERS: Record<DifficultyLevel, number> = {
 export const getXpToNextLevel = (level: number): number => {
   return 100 * Math.pow(1.2, level -1);
 };
+
