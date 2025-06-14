@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Dumbbell, CheckCircle2, Sparkles, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function WorkoutLogList() {
   const today = new Date().toISOString().split('T')[0];
@@ -21,9 +22,9 @@ export function WorkoutLogList() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [isClient, setIsClient] = useState(false);
   
-  const initialLogState = { date: today, completedExerciseIds: [], workoutCompleted: false };
-  // Initialize currentLog with initialLogState directly. It will be updated by useEffect.
-  const [currentLog, setCurrentLog] = useState<DailyLog>(initialLogState);
+  // Define a stable initial state for currentLog, or use a function for useState
+  const getInitialLogState = useCallback(() => ({ date: today, completedExerciseIds: [], workoutCompleted: false }), [today]);
+  const [currentLog, setCurrentLog] = useState<DailyLog>(getInitialLogState);
   
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number }>({ xpEarned: 0, levelledUp: false });
@@ -37,17 +38,11 @@ export function WorkoutLogList() {
 
   useEffect(() => {
     if (isClient) {
-      // Ensure userProfile is initialized if null
-      if (!userProfile) {
-        setUserProfile(DEFAULT_USER_PROFILE);
-        // If userProfile was null and just got set, dailyLogs might also need re-evaluation for currentLog
-        setCurrentLog(dailyLogs[today] || initialLogState);
-      } else {
-        // userProfile is available, set currentLog
-        setCurrentLog(dailyLogs[today] || initialLogState);
-      }
+      // currentLog should be updated when isClient, today, or dailyLogs change.
+      // userProfile is used for enabling actions and display, but not for defining the structure of currentLog for today.
+      setCurrentLog(dailyLogs[today] || getInitialLogState());
     }
-  }, [isClient, today, dailyLogs, userProfile, setUserProfile, initialLogState]);
+  }, [isClient, today, dailyLogs, getInitialLogState]);
 
 
   if (!isClient || !workout || !userProfile) {
@@ -62,9 +57,25 @@ export function WorkoutLogList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label>Progress: Loading...</Label>
-            <Progress value={0} className="w-full h-3 mt-1" />
+            <Skeleton className="h-4 w-1/3 mb-1" />
+            <Skeleton className="h-3 w-full" />
           </div>
+          <Separator className="my-6" />
+           <ul className="space-y-4">
+            {[...Array(WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID)?.exercises.length || 3)].map((_, index) => (
+              <li key={index}>
+                <div className="flex items-center justify-between p-4 bg-background rounded-lg shadow">
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-6 w-6 rounded-sm" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+                 <Skeleton className="h-3 w-3/4 mt-1 pl-4" />
+                {index < (WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID)?.exercises.length || 3) - 1 && <Separator className="my-4" />}
+              </li>
+            ))}
+          </ul>
         </CardContent>
         <CardFooter>
           <Button size="lg" className="w-full font-headline text-lg" disabled>
@@ -87,7 +98,7 @@ export function WorkoutLogList() {
   };
 
   const handleFinishWorkout = () => {
-    if (!userProfile) { // Explicit guard
+    if (!userProfile) { 
       toast({ title: "Error", description: "User profile not loaded. Please try again.", variant: "destructive" });
       return;
     }
@@ -126,11 +137,11 @@ export function WorkoutLogList() {
       level: newLevel,
       rewards: levelledUp ? [...userProfile.rewards, `Level ${newLevel} Achieved Aura`] : userProfile.rewards,
     };
-    setUserProfile(updatedProfile);
+    setUserProfile(updatedProfile); // This updates the profile in localStorage via useLocalStorageState
 
     const finalLog = { ...currentLog, workoutCompleted: true };
-    setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog }));
-    setCurrentLog(finalLog);
+    setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog })); // This updates dailyLogs in localStorage
+    setCurrentLog(finalLog); // Update local component state for currentLog
 
     setModalData({ xpEarned, levelledUp, newLevel: levelledUp ? newLevel : undefined });
     setShowCompletionModal(true);

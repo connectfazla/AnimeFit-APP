@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CharacterCard } from './CharacterCard';
 import { CHARACTERS, DEFAULT_USER_PROFILE_ID, DEFAULT_USER_PROFILE } from '@/lib/constants';
 import type { UserProfile } from '@/lib/types';
@@ -22,15 +22,14 @@ export function CharacterSelectionGrid() {
   }, []);
 
   useEffect(() => {
-    if (isClient) {
-      if (userProfile) {
-        setSelectedCharacterId(userProfile.selectedCharacterId);
-      } else {
-        setUserProfile(DEFAULT_USER_PROFILE);
-        setSelectedCharacterId(DEFAULT_USER_PROFILE.selectedCharacterId);
-      }
+    if (isClient && userProfile) {
+      // If userProfile exists, set selectedCharacterId from it.
+      // No need to call setUserProfile here.
+      setSelectedCharacterId(userProfile.selectedCharacterId);
     }
-  }, [isClient, userProfile, setUserProfile]);
+    // If userProfile is null while isClient is true, the component will show its loading state.
+    // The parent page or auth service is responsible for initializing userProfile.
+  }, [isClient, userProfile]);
 
   const handleSelectCharacter = (id: string) => {
     setSelectedCharacterId(id);
