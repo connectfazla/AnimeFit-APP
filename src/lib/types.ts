@@ -34,6 +34,8 @@ export interface UserProfile {
   workoutDays: string[]; 
   rewards: string[]; 
   reminderTime: string | null; 
+  currentStreak: number; // Added for streak system
+  lastWorkoutDate: string | null; // Added for streak system (YYYY-MM-DD)
 }
 
 export interface DailyLog {

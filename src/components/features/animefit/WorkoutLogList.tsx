@@ -26,7 +26,7 @@ export function WorkoutLogList() {
   const [currentLog, setCurrentLog] = useState<DailyLog>(getInitialLogState);
   
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number }>({ xpEarned: 0, levelledUp: false });
+  const [modalData, setModalData] = useState<{ xpEarned: number, levelledUp: boolean, newLevel?: number, characterName?: string, selectedCharacterImageUrl?: string | null }>({ xpEarned: 0, levelledUp: false });
   const [helpExercise, setHelpExercise] = useState<Exercise | null>(null);
 
   const workout = WORKOUTS.find(w => w.id === MAIN_WORKOUT_ID);
@@ -128,11 +128,34 @@ export function WorkoutLogList() {
       xpToNext = getXpToNextLevel(newLevel);
     }
     
+    // Streak Logic
+    let newStreak = userProfile.currentStreak;
+    const lastWorkoutString = userProfile.lastWorkoutDate;
+
+    if (lastWorkoutString) {
+        const lastWorkoutDate = new Date(lastWorkoutString + "T00:00:00"); // Ensure parsing as local date
+        const todayDate = new Date(today + "T00:00:00"); // Ensure parsing as local date
+        
+        const diffTime = todayDate.getTime() - lastWorkoutDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Use Math.round for more robust day diff
+
+        if (diffDays === 1) { // Worked out yesterday
+            newStreak++;
+        } else if (diffDays > 1) { // Missed one or more days
+            newStreak = 1; // Reset streak
+        } // if diffDays === 0, it means workout already logged today, streak doesn't change here if re-logging, but this function should not be called if already completed.
+          // If it *is* called (e.g. bug), and diffDays is 0, streak won't change wrongly.
+    } else { // First workout ever
+        newStreak = 1;
+    }
+    
     const updatedProfile: UserProfile = {
       ...userProfile,
       experiencePoints: newExperiencePoints,
       level: newLevel,
       rewards: levelledUp ? [...userProfile.rewards, `Level ${newLevel} Achieved Aura`] : userProfile.rewards,
+      currentStreak: newStreak,
+      lastWorkoutDate: today,
     };
     setUserProfile(updatedProfile); 
 
@@ -140,7 +163,14 @@ export function WorkoutLogList() {
     setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog })); 
     setCurrentLog(finalLog); 
 
-    setModalData({ xpEarned, levelledUp, newLevel: levelledUp ? newLevel : undefined });
+    const selectedChar = CHARACTERS.find(c => c.id === updatedProfile.selectedCharacterId);
+    setModalData({ 
+      xpEarned, 
+      levelledUp, 
+      newLevel: levelledUp ? newLevel : undefined,
+      characterName: selectedChar?.name,
+      selectedCharacterImageUrl: selectedChar?.imageUrl || userProfile.customProfileImageUrl 
+    });
     setShowCompletionModal(true);
 
     toast({
@@ -232,7 +262,7 @@ export function WorkoutLogList() {
               <p className="text-sm text-muted-foreground">Recommended duration: {helpExercise.duration}.</p>
             }
             {helpExercise?.videoTutorialUrl && (
-              <div className="aspect-w-16 aspect-h-9">
+              <div className="aspect-video w-full">
                 <iframe
                   src={helpExercise.videoTutorialUrl}
                   title={`${helpExercise.name} Tutorial`}
@@ -247,14 +277,15 @@ export function WorkoutLogList() {
         </DialogContent>
       </Dialog>
 
-      {userProfile && <WorkoutCompletionModal
+      <WorkoutCompletionModal
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}
-        characterName={CHARACTERS.find(c => c.id === userProfile.selectedCharacterId)?.name}
+        characterName={modalData.characterName}
         xpEarned={modalData.xpEarned}
         levelledUp={modalData.levelledUp}
         newLevel={modalData.newLevel}
-      />}
+        selectedCharacterImageUrl={modalData.selectedCharacterImageUrl}
+      />
     </>
   );
 }

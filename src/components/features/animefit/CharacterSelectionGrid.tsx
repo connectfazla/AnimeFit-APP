@@ -23,12 +23,8 @@ export function CharacterSelectionGrid() {
 
   useEffect(() => {
     if (isClient && userProfile) {
-      // If userProfile exists, set selectedCharacterId from it.
-      // No need to call setUserProfile here.
       setSelectedCharacterId(userProfile.selectedCharacterId);
     }
-    // If userProfile is null while isClient is true, the component will show its loading state.
-    // The parent page or auth service is responsible for initializing userProfile.
   }, [isClient, userProfile]);
 
   const handleSelectCharacter = (id: string) => {
@@ -55,7 +51,7 @@ export function CharacterSelectionGrid() {
   if (!isClient || !userProfile) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {[...Array(CHARACTERS.length || 4)].map((_, index) => (
             <Card key={index} className="w-full shadow-lg">
               <Skeleton className="aspect-[3/4] w-full rounded-t-lg" />
@@ -80,7 +76,7 @@ export function CharacterSelectionGrid() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {CHARACTERS.map((character) => (
           <CharacterCard
             key={character.id}
@@ -90,7 +86,7 @@ export function CharacterSelectionGrid() {
           />
         ))}
       </div>
-      <div className="flex justify-center">
+      <div className="flex justify-center pb-4">
         <Button 
           onClick={handleConfirmSelection} 
           size="lg" 

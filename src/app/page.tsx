@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProgressChartClient } from '@/components/features/animefit/ProgressChartClient';
 import { LevelIndicator } from '@/components/features/animefit/LevelIndicator';
+import { StreakDisplay } from '@/components/features/animefit/StreakDisplay'; // Import StreakDisplay
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID, CHARACTERS } from '@/lib/constants';
 import type { UserProfile, AnimeCharacter, DailyLog } from '@/lib/types';
@@ -56,11 +57,9 @@ export default function DashboardPage() {
           };
           setUserProfile(defaultProfileForUser);
           localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
-          // Also update the generic key if this is the first setup for this user
           localStorage.setItem(DEFAULT_USER_PROFILE_ID, JSON.stringify(defaultProfileForUser));
         }
       } else if (!currentUser && !userProfile) { 
-         // No authenticated user and no active profile, set default (should be rare due to redirect)
         setUserProfile(DEFAULT_USER_PROFILE);
         localStorage.setItem(DEFAULT_USER_PROFILE_ID, JSON.stringify(DEFAULT_USER_PROFILE));
       }
@@ -89,7 +88,8 @@ export default function DashboardPage() {
               <Skeleton className="h-24 w-full" />
             </CardContent>
           </Card>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </div>
@@ -154,9 +154,8 @@ export default function DashboardPage() {
            )}
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
-            {/* "Today's Quest" card is now first */}
-            <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
+        <div className="grid md:grid-cols-3 gap-6">
+            <Card className="shadow-lg bg-card/80 backdrop-blur-sm md:col-span-1">
                 <CardHeader>
                     <CardTitle className="font-headline text-xl text-primary flex items-center"><Dumbbell className="mr-2 h-6 w-6"/>Today's Quest</CardTitle>
                     <CardDescription className="text-muted-foreground">Jump into your daily training regime.</CardDescription>
@@ -169,8 +168,8 @@ export default function DashboardPage() {
                     </Link>
                 </CardContent>
             </Card>
-            {/* LevelIndicator card is now second */}
             <LevelIndicator userProfile={userProfile} />
+            <StreakDisplay userProfile={userProfile} /> 
         </div>
 
         <ProgressChartClient dailyLogs={dailyLogs} />

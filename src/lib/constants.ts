@@ -43,6 +43,8 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   workoutDays: ["Monday", "Wednesday", "Friday"],
   rewards: ["First Step Badge"],
   reminderTime: "08:00",
+  currentStreak: 0,
+  lastWorkoutDate: null,
 };
 
 export const XP_PER_EXERCISE = 10;

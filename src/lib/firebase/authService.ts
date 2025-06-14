@@ -8,7 +8,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   type User as FirebaseUser,
-  updateProfile as firebaseUpdateProfile, // Renamed to avoid conflict
+  updateProfile as firebaseUpdateProfile, 
 } from 'firebase/auth';
 import { auth } from './config';
 import type { UserProfile } from '@/lib/types';
@@ -18,7 +18,6 @@ export type { FirebaseUser };
 
 const googleProvider = new GoogleAuthProvider();
 
-// Renamed from updateUserProfileName to avoid conflict with the new custom field
 export async function updateUserProfileFirebase(user: FirebaseUser, profileData: { displayName?: string | null; photoURL?: string | null; }): Promise<void> {
   await firebaseUpdateProfile(user, profileData);
 }
@@ -29,11 +28,10 @@ export async function signUpWithEmail(email: string, password: string, name: str
   await firebaseUpdateProfile(userCredential.user, { displayName: name });
   
   const newUserProfile: UserProfile = {
-    ...DEFAULT_USER_PROFILE,
+    ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
     id: userCredential.user.uid,
     name: name || userCredential.user.displayName || "Anime Hero",
-    selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId,
-    customProfileImageUrl: null, // Initialize new field
+    customProfileImageUrl: null, 
   };
 
   if (typeof window !== 'undefined') {
@@ -58,16 +56,17 @@ export async function signInWithGoogle(): Promise<FirebaseUser> {
     let userProfile = JSON.parse(localStorage.getItem(`userProfile-${user.uid}`) || 'null') as UserProfile | null;
     if (!userProfile) {
       userProfile = {
-        ...DEFAULT_USER_PROFILE,
+        ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
         id: user.uid,
         name: user.displayName || "Anime Hero",
-        selectedCharacterId: DEFAULT_USER_PROFILE.selectedCharacterId,
-        customProfileImageUrl: user.photoURL || null, // Use Google photo if available, else null
+        customProfileImageUrl: user.photoURL || null,
       };
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     } else {
-      // If profile exists, ensure customProfileImageUrl is there, potentially updating from Google photo
-      userProfile.customProfileImageUrl = userProfile.customProfileImageUrl || user.photoURL || null;
+      // Ensure new fields are present if loading an older profile structure
+      userProfile.customProfileImageUrl = userProfile.customProfileImageUrl === undefined ? (user.photoURL || null) : userProfile.customProfileImageUrl;
+      userProfile.currentStreak = userProfile.currentStreak === undefined ? 0 : userProfile.currentStreak;
+      userProfile.lastWorkoutDate = userProfile.lastWorkoutDate === undefined ? null : userProfile.lastWorkoutDate;
       localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     }
     localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(userProfile));
@@ -92,24 +91,26 @@ async function loadAndActivateUserProfile(user: FirebaseUser) {
     
     if (!userProfile) {
       userProfile = {
-        ...DEFAULT_USER_PROFILE,
+        ...DEFAULT_USER_PROFILE, // This includes currentStreak: 0 and lastWorkoutDate: null
         id: user.uid,
         name: user.displayName || "Anime Hero",
-        customProfileImageUrl: user.photoURL || null, // Initialize with Firebase photoURL if available
+        customProfileImageUrl: user.photoURL || null, 
       };
-      localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     } else {
-      // Ensure customProfileImageUrl is part of the loaded profile
+      // Ensure new fields are present if loading an older profile structure
        if (userProfile.customProfileImageUrl === undefined) {
          userProfile.customProfileImageUrl = user.photoURL || null;
-         localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
+       }
+       if (userProfile.currentStreak === undefined) {
+         userProfile.currentStreak = 0;
+       }
+       if (userProfile.lastWorkoutDate === undefined) {
+         userProfile.lastWorkoutDate = null;
        }
     }
+    localStorage.setItem(`userProfile-${user.uid}`, JSON.stringify(userProfile));
     localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(userProfile));
   }
 }
 
-// This function was previously named updateUserProfileName
-// Keeping it specific for Firebase Auth profile update if needed separately from local UserProfile
 export { firebaseUpdateProfile as updateUserProfileName };
-

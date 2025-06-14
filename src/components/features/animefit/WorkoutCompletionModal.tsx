@@ -1,8 +1,10 @@
+
 "use client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PartyPopper, X } from "lucide-react";
+import { APP_LOGO_URL } from "@/lib/constants"; // Fallback image
 
 interface WorkoutCompletionModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface WorkoutCompletionModalProps {
   xpEarned?: number;
   levelledUp?: boolean;
   newLevel?: number;
+  selectedCharacterImageUrl?: string | null;
 }
 
 export function WorkoutCompletionModal({
@@ -19,9 +22,14 @@ export function WorkoutCompletionModal({
   characterName,
   xpEarned,
   levelledUp,
-  newLevel
+  newLevel,
+  selectedCharacterImageUrl
 }: WorkoutCompletionModalProps) {
   if (!isOpen) return null;
+
+  const displayImage = selectedCharacterImageUrl || APP_LOGO_URL;
+  const imageAlt = selectedCharacterImageUrl ? `${characterName || 'Hero'} in victory!` : "Workout Complete Placeholder";
+  const imageHint = selectedCharacterImageUrl ? "character victory" : "celebration placeholder";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -35,14 +43,17 @@ export function WorkoutCompletionModal({
         </DialogDescription>
         
         <div className="my-6 text-center">
-          {/* Placeholder for anime-style animation/image */}
           <Image 
-            src="https://placehold.co/300x200.png" 
-            alt="Workout Complete Animation" 
-            width={300} 
-            height={200}
-            className="mx-auto rounded-lg shadow-lg animate-anime-power-up"
-            data-ai-hint="victory celebration"
+            src={displayImage}
+            alt={imageAlt} 
+            width={250} 
+            height={250}
+            className="mx-auto rounded-lg shadow-lg animate-anime-power-up object-contain aspect-square"
+            data-ai-hint={imageHint}
+            onError={(e) => {
+                (e.target as HTMLImageElement).src = APP_LOGO_URL;
+                (e.target as HTMLImageElement).alt = "Fallback celebration image";
+            }}
           />
           <p className="mt-4 text-xl font-semibold text-accent">
             YOU'VE POWERED UP!
@@ -50,7 +61,7 @@ export function WorkoutCompletionModal({
         </div>
 
         {xpEarned && (
-          <p className="text-center text-md">You earned <span className="font-bold text-primary">{xpEarned} XP</span>!</p>
+          <p className="text-center text-md">You earned <span className="font-bold text-primary">{xpEarned.toFixed(0)} XP</span>!</p>
         )}
         {levelledUp && newLevel && (
           <p className="text-center text-lg font-bold text-accent animate-pulse">
