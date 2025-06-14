@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { PartyPopper, X } from "lucide-react";
+import { PartyPopper, X, Clock } from "lucide-react";
 import { APP_LOGO_URL } from "@/lib/constants"; // Fallback image
 
 interface WorkoutCompletionModalProps {
@@ -14,6 +14,7 @@ interface WorkoutCompletionModalProps {
   levelledUp?: boolean;
   newLevel?: number;
   selectedCharacterImageUrl?: string | null;
+  workoutDuration?: string;
 }
 
 export function WorkoutCompletionModal({
@@ -23,7 +24,8 @@ export function WorkoutCompletionModal({
   xpEarned,
   levelledUp,
   newLevel,
-  selectedCharacterImageUrl
+  selectedCharacterImageUrl,
+  workoutDuration
 }: WorkoutCompletionModalProps) {
   if (!isOpen) return null;
 
@@ -60,11 +62,17 @@ export function WorkoutCompletionModal({
           </p>
         </div>
 
+        {workoutDuration && (
+          <p className="text-center text-md flex items-center justify-center">
+            <Clock className="mr-2 h-5 w-5 text-muted-foreground" />
+            Total Training Time: <span className="font-bold text-primary ml-1">{workoutDuration}</span>
+          </p>
+        )}
         {xpEarned && (
-          <p className="text-center text-md">You earned <span className="font-bold text-primary">{xpEarned.toFixed(0)} XP</span>!</p>
+          <p className="text-center text-md mt-1">You earned <span className="font-bold text-primary">{xpEarned.toFixed(0)} XP</span>!</p>
         )}
         {levelledUp && newLevel && (
-          <p className="text-center text-lg font-bold text-accent animate-pulse">
+          <p className="text-center text-lg font-bold text-accent animate-pulse mt-2">
             LEVEL UP! You are now Level {newLevel}!
           </p>
         )}
