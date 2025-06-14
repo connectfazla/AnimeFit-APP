@@ -9,7 +9,7 @@ import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID } from '@/lib/constants';
 import type { UserProfile } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
@@ -56,7 +56,7 @@ export default function ProfilePage() {
           localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
         }
       } else if (!currentUser && !userProfile) {
-          setUserProfile(DEFAULT_USER_PROFILE); // Should be rare
+          // setUserProfile(DEFAULT_USER_PROFILE); // This line might cause issues if not needed
       }
     }
   }, [isClient, authLoading, currentUser, userProfile, setUserProfile]);
@@ -123,3 +123,4 @@ export default function ProfilePage() {
     </AppLayout>
   );
 }
+
