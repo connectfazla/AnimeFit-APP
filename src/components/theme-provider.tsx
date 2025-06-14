@@ -1,8 +1,7 @@
 
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-// Use next-themes for a more robust solution if preferred, but this is a minimal custom hook.
+import { createContext, useContext, useEffect, useState, type ReactNode, useCallback } from 'react';
 
 type Theme = "dark" | "light" | "system";
 
@@ -10,19 +9,19 @@ interface ThemeProviderProps {
   children: ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-  attribute?: string; // "class" or "data-theme"
+  attribute?: string; 
   enableSystem?: boolean;
-  disableTransitionOnChange?: boolean; // For next-themes compatibility, not fully used here
 }
 
 interface ThemeProviderState {
-  theme: Theme;
-  resolvedTheme?: "dark" | "light";
+  theme: Theme; 
+  resolvedTheme?: "dark" | "light"; 
   setTheme: (theme: Theme) => void;
 }
 
 const initialState: ThemeProviderState = {
   theme: "system",
+  resolvedTheme: "light", 
   setTheme: () => null,
 };
 
@@ -31,79 +30,105 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "animefit-theme", // Changed storage key
-  attribute = "class", // Default to class
+  storageKey = "animefit-theme",
+  attribute = "class",
   enableSystem = true,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return defaultTheme;
-    try {
-      return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
-    } catch (e) {
-      // If localStorage is unavailable
-      return defaultTheme;
+  const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme); 
+  const [actualResolvedTheme, setActualResolvedTheme] = useState<"dark" | "light" | undefined>(undefined);
+  const [mounted, setMounted] = useState(false);
+
+  const applyThemeToDom = useCallback((newThemeToApply: "dark" | "light") => {
+    const root = window.document.documentElement;
+    if (attribute === "class") {
+      root.classList.remove("light", "dark");
+      root.classList.add(newThemeToApply);
+    } else {
+      root.setAttribute('data-theme', newThemeToApply);
     }
-  });
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light' | undefined>(undefined);
+  }, [attribute]);
+  
+  useEffect(() => {
+    setMounted(true);
+    let initialUserTheme: Theme = defaultTheme;
+    try {
+      const storedTheme = window.localStorage.getItem(storageKey) as Theme | null;
+      if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
+        initialUserTheme = storedTheme;
+      }
+    } catch (e) {
+      // Ignore localStorage error
+    }
+    setCurrentTheme(initialUserTheme);
+  }, [defaultTheme, storageKey]);
 
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!mounted) {
+      // Determine initial resolved theme for SSR consistency, but don't apply to DOM yet
+      // The DOM class should match server output initially.
+      // suppressHydrationWarning on <html> handles class mismatch if server sends no class / default class.
+      if (defaultTheme === "system" && enableSystem && typeof window !== "undefined") {
+        setActualResolvedTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } else {
+        setActualResolvedTheme(defaultTheme === "dark" ? "dark" : "light");
+      }
+      return;
+    }
+
+    let newResolvedTheme: "dark" | "light";
+    if (currentTheme === "system" && enableSystem) {
+      newResolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } else {
+      newResolvedTheme = currentTheme === "dark" ? "dark" : "light";
+    }
     
-    const root = window.document.documentElement;
+    setActualResolvedTheme(newResolvedTheme);
+    applyThemeToDom(newResolvedTheme);
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const applyTheme = (currentTheme: Theme) => {
-      let newResolvedTheme: "dark" | "light";
-      if (currentTheme === "system" && enableSystem) {
-        newResolvedTheme = mediaQuery.matches ? "dark" : "light";
-      } else {
-        newResolvedTheme = currentTheme === "dark" ? "dark" : "light";
-      }
-      
-      setResolvedTheme(newResolvedTheme);
-
-      if (attribute === "class") {
-        root.classList.remove("light", "dark");
-        root.classList.add(newResolvedTheme);
-      } else {
-        root.setAttribute('data-theme', newResolvedTheme);
-      }
-    };
-
-    applyTheme(theme); // Apply theme on initial load and when theme state changes
-
     const handleChange = () => {
-      if (theme === "system" && enableSystem) {
-        applyTheme("system");
+      if (currentTheme === "system" && enableSystem) {
+        const changedResolvedTheme = mediaQuery.matches ? "dark" : "light";
+        setActualResolvedTheme(changedResolvedTheme);
+        applyThemeToDom(changedResolvedTheme);
       }
     };
 
     if (enableSystem) {
-        mediaQuery.addEventListener("change", handleChange);
+      mediaQuery.addEventListener("change", handleChange);
     }
-    
     return () => {
-        if (enableSystem) {
-            mediaQuery.removeEventListener("change", handleChange);
-        }
-    };
-  }, [theme, attribute, enableSystem, storageKey]);
-
-  const value = {
-    theme,
-    resolvedTheme,
-    setTheme: (newTheme: Theme) => {
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKey, newTheme);
-        } catch (e) {
-          // localStorage unavailable
-        }
+      if (enableSystem) {
+        mediaQuery.removeEventListener("change", handleChange);
       }
-      setTheme(newTheme);
-    },
+    };
+  }, [currentTheme, mounted, enableSystem, applyThemeToDom, defaultTheme]);
+
+
+  const handleSetTheme = (newThemeToSet: Theme) => {
+    try {
+      window.localStorage.setItem(storageKey, newThemeToSet);
+    } catch (e) {
+      // Ignore localStorage error
+    }
+    setCurrentTheme(newThemeToSet);
+  };
+  
+  const contextValueTheme = !mounted ? defaultTheme : currentTheme;
+  const contextValueResolvedTheme = !mounted
+    ? (defaultTheme === "system" && enableSystem && typeof window !== "undefined"
+        ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : (defaultTheme === "dark" ? "dark" : "light")
+      )
+    : actualResolvedTheme;
+
+
+  const value: ThemeProviderState = {
+    theme: contextValueTheme,
+    resolvedTheme: contextValueResolvedTheme,
+    setTheme: handleSetTheme,
   };
 
   return (
@@ -115,9 +140,8 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
-
   if (context === undefined)
     throw new Error("useTheme must be used within a ThemeProvider");
-
   return context;
 };
+
