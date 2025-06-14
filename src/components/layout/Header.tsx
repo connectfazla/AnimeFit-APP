@@ -60,7 +60,7 @@ export function Header({ pageTitle }: { pageTitle: string }) {
              <Image
                 src={APP_LOGO_URL}
                 alt={`${APP_NAME} logo`}
-                width={32}
+                width={130}
                 height={32}
                 data-ai-hint="app logo"
               />
@@ -90,7 +90,7 @@ export function Header({ pageTitle }: { pageTitle: string }) {
             <Image
               src={APP_LOGO_URL}
               alt={`${APP_NAME} logo`}
-              width={36} // Slightly larger for mobile header
+              width={136} // Slightly larger for mobile header
               height={36}
               data-ai-hint="app logo"
             />
