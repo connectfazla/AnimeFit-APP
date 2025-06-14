@@ -1,10 +1,10 @@
 
 "use client";
 import Link from 'next/link';
-import Image from 'next/image'; // Added for logo
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, LogIn, UserPlus, LogOut } from 'lucide-react'; // Removed Dumbbell
+import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
 import { onAuthStateChanged, signOut as firebaseSignOutService, type FirebaseUser } from '@/lib/firebase/authService';
@@ -57,14 +57,14 @@ export function SidebarNav() {
   };
 
   return (
-    <Sidebar variant="sidebar" side="left" collapsible="icon">
+    <Sidebar side="left" collapsible="icon">
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
-          <Image 
-            src="/alignlogo.png" 
-            alt={`${APP_NAME} logo`} 
-            width={32} 
-            height={32} 
+          <Image
+            src="/logo-placeholder.png"
+            alt={`${APP_NAME} logo`}
+            width={32}
+            height={32}
             className="text-primary"
             data-ai-hint="app logo"
           />
@@ -75,6 +75,7 @@ export function SidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
+          {/* Always show main nav items; page-level auth will handle redirection */}
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>
@@ -91,10 +92,10 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuItem>
           ))}
-          
+
           <hr className="my-2 border-sidebar-border group-data-[collapsible=icon]:hidden" />
-          
-          {mounted && currentUser ? (
+
+          {mounted && currentUser && (
             <SidebarMenuItem className="group-data-[collapsible=icon]:my-1">
               <SidebarMenuButton
                 variant="ghost"
@@ -107,26 +108,9 @@ export function SidebarNav() {
                 <span className="group-data-[collapsible=icon]:hidden">Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ) : mounted && !currentUser ? (
-            authNavItems.map((item) => (
-              <SidebarMenuItem key={item.href} className="group-data-[collapsible=icon]:my-1">
-                <Link href={item.href}>
-                  <SidebarMenuButton
-                    variant="ghost"
-                    size="default"
-                    isActive={pathname === item.href}
-                    tooltip={{ children: item.label, side: 'right', align: 'center' }}
-                    className="justify-start"
-                  >
-                    <item.icon className="h-5 w-5 mr-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))
-          ) : (
-            // Fallback for initial render before `mounted` is true or if auth state is indeterminate.
-            // Renders the static auth links by default during this phase.
+          )}
+          
+          {mounted && !currentUser && (
             authNavItems.map((item) => (
               <SidebarMenuItem key={item.href} className="group-data-[collapsible=icon]:my-1">
                 <Link href={item.href}>

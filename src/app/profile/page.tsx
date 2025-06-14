@@ -1,3 +1,4 @@
+
 "use client";
 import { AppLayout } from '@/components/layout/AppLayout';
 import { UserProfileCard } from '@/components/features/animefit/UserProfileCard';
@@ -10,64 +11,83 @@ import type { UserProfile } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BellRing, Star, Trophy, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [isClient, setIsClient] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        router.push('/login');
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, [router]);
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   // Initialize profile if it doesn't exist and client has mounted
   useEffect(() => {
-    if (isClient && !userProfile) {
-      setUserProfile(DEFAULT_USER_PROFILE);
+    if (isClient && currentUser && !userProfile) {
+      const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
+      const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
+      if (storedUserProfile) {
+        setUserProfile(JSON.parse(storedUserProfile));
+      } else {
+         const defaultProfileForUser: UserProfile = {
+            ...DEFAULT_USER_PROFILE,
+            id: currentUser.uid,
+            name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+        };
+        setUserProfile(defaultProfileForUser);
+        localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
+        localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(defaultProfileForUser));
+      }
+    } else if (isClient && !currentUser && !userProfile) {
+        setUserProfile(DEFAULT_USER_PROFILE);
     }
-  }, [isClient, userProfile, setUserProfile]);
+  }, [isClient, userProfile, setUserProfile, currentUser]);
 
-  if (!isClient) {
-    // Server-side rendering or client pre-hydration:
-    // Render placeholders that match the "loading" state of child components.
+  if (authLoading || !isClient) {
     return (
       <AppLayout pageTitle="Your Hero Profile">
         <div className="container mx-auto py-8 space-y-8">
-          {/* Placeholder for UserProfileCard */}
           <Card className="w-full max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm">
             <CardContent className="p-6 text-center text-muted-foreground">Loading profile...</CardContent>
           </Card>
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Placeholder for LevelIndicator */}
-            <Card className="shadow-md bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4 text-center text-muted-foreground">Loading level...</CardContent>
-            </Card>
-            {/* Placeholder for RewardDisplay */}
-            <Card className="shadow-md bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-4 text-center text-muted-foreground">Loading rewards...</CardContent>
-            </Card>
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-48 w-full" />
           </div>
-          {/* Placeholder for ReminderSettingsForm */}
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl text-primary flex items-center">
-                <BellRing className="mr-2 h-7 w-7" /> Workout Reminders
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Loading reminder settings...
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-10">{/* Placeholder for input */}</div>
-            </CardContent>
-          </Card>
+          <Skeleton className="h-48 w-full" />
         </div>
       </AppLayout>
     );
   }
 
-  // Client-side rendering after hydration:
-  // If userProfile is still null at this point (e.g., local storage was empty and default not yet set by effect)
-  // child components will show their specific loading states.
+  if (!currentUser) {
+     return (
+       <AppLayout pageTitle="Redirecting...">
+        <div className="flex min-h-screen items-center justify-center">
+          <p>Redirecting to login...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+  
+  // User is authenticated, show profile content (userProfile might still be loading from localStorage here)
   return (
     <AppLayout pageTitle="Your Hero Profile">
       <div className="container mx-auto py-8 space-y-8">

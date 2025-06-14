@@ -12,33 +12,71 @@ import type { UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { UserCog } from 'lucide-react';
+import { onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditProfilePage() {
+  const router = useRouter();
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [name, setName] = useState('');
   const [isClient, setIsClient] = useState(false);
-  const router = useRouter();
+  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        router.push('/login');
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (isClient) {
+    if (isClient && currentUser) {
       if (userProfile) {
         setName(userProfile.name);
       } else {
-        // If no profile, initialize and set name from default
+        const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
+        const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
+        if (storedUserProfile) {
+          const loadedProfile = JSON.parse(storedUserProfile);
+          setUserProfile(loadedProfile);
+          setName(loadedProfile.name);
+        } else {
+          const defaultProfileForUser: UserProfile = {
+            ...DEFAULT_USER_PROFILE,
+            id: currentUser.uid,
+            name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+          };
+          setUserProfile(defaultProfileForUser);
+          setName(defaultProfileForUser.name);
+          localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
+          localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(defaultProfileForUser));
+        }
+      }
+    } else if (isClient && !currentUser && !userProfile) {
+        // Fallback if no user but also no profile
         setUserProfile(DEFAULT_USER_PROFILE);
         setName(DEFAULT_USER_PROFILE.name);
-      }
     }
-  }, [isClient, userProfile, setUserProfile]);
+  }, [isClient, userProfile, setUserProfile, currentUser]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (userProfile && name.trim() !== "") {
-      setUserProfile({ ...userProfile, name: name.trim() });
+    if (userProfile && name.trim() !== "" && currentUser) {
+      const updatedProfile = { ...userProfile, name: name.trim() };
+      setUserProfile(updatedProfile);
+      // Also update the user-specific profile
+      localStorage.setItem(`userProfile-${currentUser.uid}`, JSON.stringify(updatedProfile));
+
       toast({
         title: 'Profile Updated!',
         description: 'Your hero name has been changed.',
@@ -53,7 +91,7 @@ export default function EditProfilePage() {
     }
   };
 
-  if (!isClient || !userProfile) {
+  if (authLoading || !isClient || (isClient && !currentUser)) {
     return (
       <AppLayout pageTitle="Edit Profile">
         <div className="container mx-auto py-8 flex justify-center">
@@ -64,14 +102,12 @@ export default function EditProfilePage() {
                   Customize Your Hero Identity
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Loading profile to edit...
+                  {authLoading ? 'Checking authentication...' : 'Loading profile to edit...'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                 <div className="space-y-2">
-                    <Label htmlFor="name-placeholder">Hero Name</Label>
-                    <Input id="name-placeholder" value="Loading..." disabled />
-                  </div>
+                <Skeleton className="h-10 w-full mb-2" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
               <CardFooter className="flex justify-end gap-2">
                 <Button type="button" variant="outline" disabled>Cancel</Button>
@@ -82,7 +118,8 @@ export default function EditProfilePage() {
       </AppLayout>
     );
   }
-
+  
+  // User is authenticated and client is ready
   return (
     <AppLayout pageTitle="Edit Your Profile">
       <div className="container mx-auto py-8 flex justify-center">
@@ -107,6 +144,7 @@ export default function EditProfilePage() {
                   placeholder="E.g., Captain Fit"
                   className="text-lg"
                   required
+                  disabled={!userProfile} // Disable if profile hasn't loaded from localstorage yet
                 />
               </div>
             </CardContent>
@@ -114,7 +152,7 @@ export default function EditProfilePage() {
               <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
               </Button>
-              <Button type="submit" className="font-headline">
+              <Button type="submit" className="font-headline" disabled={!userProfile}>
                 Save Changes
               </Button>
             </CardFooter>

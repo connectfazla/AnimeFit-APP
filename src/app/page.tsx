@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +13,27 @@ import { LevelIndicator } from '@/components/features/animefit/LevelIndicator';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID, CHARACTERS } from '@/lib/constants';
 import type { UserProfile, AnimeCharacter, DailyLog } from '@/lib/types';
-import { ArrowRight, BarChartBig, Users, CalendarPlus, TrendingUp } from 'lucide-react'; // Added TrendingUp
+import { ArrowRight, BarChartBig, Users, CalendarPlus, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [dailyLogs, setDailyLogs] = useLocalStorageState<Record<string, DailyLog>>('dailyLogs', {});
   const [isClient, setIsClient] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        router.push('/login');
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     setIsClient(true);
@@ -24,18 +41,36 @@ export default function DashboardPage() {
 
   // Initialize profile if it doesn't exist and client has mounted
   useEffect(() => {
-    if (isClient && !userProfile) {
+    if (isClient && currentUser && !userProfile) {
+      // Attempt to load user-specific profile first
+      const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
+      const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
+      if (storedUserProfile) {
+        setUserProfile(JSON.parse(storedUserProfile));
+      } else {
+        // Fallback to creating/setting default profile if no specific one found
+        const defaultProfileForUser: UserProfile = {
+            ...DEFAULT_USER_PROFILE,
+            id: currentUser.uid, // Ensure ID matches Firebase UID
+            name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+        };
+        setUserProfile(defaultProfileForUser);
+        localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
+        localStorage.setItem(`userProfile-${DEFAULT_USER_PROFILE_ID}`, JSON.stringify(defaultProfileForUser));
+      }
+    } else if (isClient && !currentUser && !userProfile) {
+      // If no current user but also no generic profile, set the default generic one.
+      // This case might be less common if auth redirects quickly.
       setUserProfile(DEFAULT_USER_PROFILE);
     }
-  }, [isClient, userProfile, setUserProfile]);
+  }, [isClient, userProfile, setUserProfile, currentUser]);
 
-  const selectedCharacter: AnimeCharacter | undefined = 
-    (isClient && userProfile) 
-    ? CHARACTERS.find(char => char.id === userProfile.selectedCharacterId) 
+  const selectedCharacter: AnimeCharacter | undefined =
+    (isClient && userProfile)
+    ? CHARACTERS.find(char => char.id === userProfile.selectedCharacterId)
     : undefined;
 
-  if (!isClient) {
-    // SSR or pre-hydration on client: Render a consistent loading state
+  if (authLoading || !isClient) {
     return (
       <AppLayout pageTitle="Dashboard">
         <div className="container mx-auto py-8 space-y-8">
@@ -49,46 +84,22 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-4 text-center text-muted-foreground">Loading level...</CardContent>
-            </Card>
-            <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle className="font-headline text-xl text-primary flex items-center"><CalendarPlus className="mr-2 h-6 w-6"/>Today's Quest</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Button size="lg" className="w-full font-headline text-lg" disabled>
-                        Loading Workout...
-                    </Button>
-                </CardContent>
-            </Card>
-          </div>
-          <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl text-primary flex items-center"><TrendingUp className="mr-2 h-6 w-6"/>Workout Progress</CardTitle>
-              <CardDescription className="text-muted-foreground">Loading chart data...</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-64">
-                <p className="text-muted-foreground">Your progress chart will appear here.</p>
-            </CardContent>
-          </Card>
+          {/* Simplified loading state for other components */}
         </div>
       </AppLayout>
     );
   }
-  
+
   if (!userProfile) {
-    // This state occurs after isClient is true, but before userProfile is potentially defaulted
     return (
       <AppLayout pageTitle="Dashboard">
         <div className="flex items-center justify-center h-full">
-          <p className="text-xl text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-xl text-muted-foreground">Loading your profile...</p>
         </div>
       </AppLayout>
     );
   }
-  
+
   return (
     <AppLayout pageTitle="Dashboard">
       <div className="container mx-auto py-8 space-y-8">
@@ -103,11 +114,11 @@ export default function DashboardPage() {
           </CardHeader>
           {selectedCharacter && (
             <CardContent className="flex flex-col md:flex-row items-center gap-6">
-              <Image 
-                src={selectedCharacter.imageUrl} 
-                alt={selectedCharacter.name} 
-                width={100} 
-                height={150} 
+              <Image
+                src={selectedCharacter.imageUrl}
+                alt={selectedCharacter.name}
+                width={100}
+                height={150}
                 className="rounded-lg shadow-md border-2 border-primary object-cover"
                 data-ai-hint={selectedCharacter.dataAiHint}
               />
@@ -150,7 +161,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         </div>
-        
+
         <ProgressChartClient dailyLogs={dailyLogs} />
 
         <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
@@ -187,7 +198,6 @@ export default function DashboardPage() {
                 </Link>
             </CardContent>
         </Card>
-
       </div>
     </AppLayout>
   );

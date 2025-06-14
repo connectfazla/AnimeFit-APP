@@ -1,6 +1,6 @@
 
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -8,12 +8,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Label is used in the example, ensuring it's available
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/authService';
-import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react'; // Using Chrome as a generic browser/Google icon
+import { signInWithEmail, signInWithGoogle, onAuthStateChanged } from '@/lib/firebase/authService';
+import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -27,6 +27,17 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      if (user) {
+        router.push('/'); // Redirect to dashboard if already logged in
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -44,7 +55,7 @@ export default function LoginPage() {
         title: 'Login Successful!',
         description: 'Welcome back, hero!',
       });
-      router.push('/'); // Redirect to dashboard
+      router.push('/'); 
     } catch (error: any) {
       toast({
         title: 'Login Failed',
@@ -64,7 +75,7 @@ export default function LoginPage() {
         title: 'Google Sign-In Successful!',
         description: 'Welcome, hero!',
       });
-      router.push('/'); // Redirect to dashboard
+      router.push('/'); 
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
@@ -75,6 +86,20 @@ export default function LoginPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
+        <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <LogIn className="mx-auto h-12 w-12 text-primary animate-pulse" />
+            <CardTitle className="font-headline text-3xl mt-4">Loading...</CardTitle>
+            <CardDescription>Checking your session...</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
