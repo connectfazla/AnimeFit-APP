@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
+  sendPasswordResetEmail,
   type User as FirebaseUser,
   updateProfile as firebaseUpdateProfile, 
 } from 'firebase/auth';
@@ -119,4 +120,9 @@ async function loadAndActivateUserProfile(user: FirebaseUser) {
   }
 }
 
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
+}
+
 export { firebaseUpdateProfile as updateUserProfileName };
+

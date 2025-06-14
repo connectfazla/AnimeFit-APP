@@ -12,11 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label'; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmail, signInWithGoogle, onAuthStateChanged, type FirebaseUser } from '@/lib/firebase/authService';
-import { LogIn, Mail, KeyRound, Chrome } from 'lucide-react';
+import { signInWithEmail, signInWithGoogle, onAuthStateChanged, type FirebaseUser, resetPassword } from '@/lib/firebase/authService';
+import { LogIn, Mail, KeyRound, Chrome, ShieldQuestion } from 'lucide-react';
 import { APP_NAME, APP_LOGO_URL } from '@/lib/constants';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -31,6 +31,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user) => {
@@ -90,6 +93,35 @@ export default function LoginPage() {
     }
   };
 
+  const handleSendResetLink = async () => {
+    if (!resetEmail) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsResettingPassword(true);
+    try {
+      await resetPassword(resetEmail);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Check your inbox for a link to reset your password.',
+      });
+      setForgotPasswordDialogOpen(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast({
+        title: 'Error Sending Reset Email',
+        description: error.message || 'Could not send password reset email. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
@@ -113,90 +145,137 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
-      <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
-        <CardHeader className="items-center text-center"> {/* Added items-center */}
-          <Link href="/" className="mb-6 inline-block">
-            <Image
-              src={APP_LOGO_URL}
-              alt={`${APP_NAME} logo`}
-              width={100} // Increased size
-              height={100} // Increased size
-              data-ai-hint="app logo"
-              className="mx-auto" // Ensure centering if parent is flex
-            />
-          </Link>
-          <CardTitle className="font-headline text-3xl text-primary">Hero Login</CardTitle>
-          <CardDescription>Access your training dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="hero@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+    <>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
+        <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm">
+          <CardHeader className="items-center text-center">
+            <Link href="/" className="mb-6 inline-block">
+              <Image
+                src={APP_LOGO_URL}
+                alt={`${APP_NAME} logo`}
+                width={100}
+                height={100}
+                data-ai-hint="app logo"
+                className="mx-auto"
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center"><KeyRound className="mr-2 h-4 w-4 text-muted-foreground" />Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Your secret power" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full font-headline" disabled={isLoading || isGoogleLoading}>
-                {isLoading ? 'Logging In...' : 'Login'}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+            </Link>
+            <CardTitle className="font-headline text-3xl text-primary">Hero Login</CardTitle>
+            <CardDescription>Access your training dashboard.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="hero@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="flex items-center"><KeyRound className="mr-2 h-4 w-4 text-muted-foreground" />Password</FormLabel>
+                        <Button 
+                          variant="link" 
+                          type="button" 
+                          onClick={() => setForgotPasswordDialogOpen(true)} 
+                          className="px-0 text-xs h-auto text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </Button>
+                      </div>
+                      <FormControl>
+                        <Input type="password" placeholder="Your secret power" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full font-headline" disabled={isLoading || isGoogleLoading}>
+                  {isLoading ? 'Logging In...' : 'Login'}
+                </Button>
+              </form>
+            </Form>
+            <div className="mt-6 relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
+            <Button 
+              variant="outline" 
+              className="w-full mt-6" 
+              onClick={handleGoogleSignIn}
+              disabled={isLoading || isGoogleLoading}
+            >
+              {isGoogleLoading ? (
+                'Signing In...'
+              ) : (
+                <>
+                  <Chrome className="mr-2 h-5 w-5" /> Sign in with Google
+                </>
+              )}
+            </Button>
+          </CardContent>
+          <CardFooter className="justify-center">
+            <p className="text-sm text-muted-foreground">
+              New hero?{' '}
+              <Link href="/signup" className="font-medium text-primary hover:underline">
+                Sign up here
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <Dialog open={forgotPasswordDialogOpen} onOpenChange={setForgotPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center font-headline text-primary">
+                <ShieldQuestion className="mr-2 h-6 w-6" />
+                Reset Your Password
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              Enter your email address below. If an account exists for that email, we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2 pb-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email" className="flex items-center">
+                <Mail className="mr-2 h-4 w-4 text-muted-foreground" /> Email Address
+              </Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="hero@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                autoComplete="email"
+              />
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            className="w-full mt-6" 
-            onClick={handleGoogleSignIn}
-            disabled={isLoading || isGoogleLoading}
-          >
-            {isGoogleLoading ? (
-              'Signing In...'
-            ) : (
-              <>
-                <Chrome className="mr-2 h-5 w-5" /> Sign in with Google
-              </>
-            )}
-          </Button>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            New hero?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
-              Sign up here
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setForgotPasswordDialogOpen(false); setResetEmail(''); }}>Cancel</Button>
+            <Button onClick={handleSendResetLink} disabled={isResettingPassword} className="font-headline">
+              {isResettingPassword ? 'Sending Link...' : 'Send Reset Link'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
