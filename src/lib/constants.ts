@@ -1,3 +1,4 @@
+
 import type { AnimeCharacter, Exercise, Workout, UserProfile } from './types';
 
 export const APP_NAME = "AnimeFit";
@@ -17,7 +18,7 @@ export const EXERCISES: Exercise[] = [
   { id: 'plank', name: 'Titan Plank', description: 'Hold a rock-solid plank like a true defender.', duration: "60s", videoTutorialUrl: 'https://www.youtube.com/embed/ASdvN_XEl_c' },
   { id: 'jumpingjacks', name: 'Flash Step Jacks', description: 'Rapid jumping jacks for speed and endurance.', duration: "120s", videoTutorialUrl: 'https://www.youtube.com/embed/c4DAnQ6DtF8' },
   { id: 'burpees', name: 'One-Punch Burpees', description: 'Full-body explosive movement.', sets: 3, reps: 10, videoTutorialUrl: 'https://www.youtube.com/embed/auKl9A2iWcE' },
-  { id: 'running', name: 'Gear Second Run', description: 'High-intensity interval running.', duration: "300s", videoTutorialUrl: 'https://www.youtube.com/embed/wRkeBVMQSgg' },
+  { id: 'running', name: 'Gear Second Run', description: 'High-intensity interval running or focus on proper form.', duration: "300s", videoTutorialUrl: 'https://www.youtube.com/embed/wRkeBVMQSgg' },
 ];
 
 export const MAIN_WORKOUT_ID = 'daily_challenge';
@@ -31,7 +32,7 @@ export const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursd
 export const DEFAULT_USER_PROFILE_ID = "currentUser"; // This ID is used as the key for the *active* user's profile in localStorage
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
-  id: DEFAULT_USER_PROFILE_ID, // This might be better set to a generic ID or dynamically to the user's UID upon creation
+  id: DEFAULT_USER_PROFILE_ID, 
   name: "Anime Athlete",
   selectedCharacterId: null,
   level: 1,
