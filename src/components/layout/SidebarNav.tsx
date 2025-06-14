@@ -1,9 +1,10 @@
 
 "use client";
 import Link from 'next/link';
+import Image from 'next/image'; // Added for logo
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, Dumbbell, LogIn, UserPlus, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, ListChecks, CalendarDays, UserCircle, LogIn, UserPlus, LogOut } from 'lucide-react'; // Removed Dumbbell
 import { APP_NAME } from '@/lib/constants';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter } from '@/components/ui/sidebar';
 import { onAuthStateChanged, signOut as firebaseSignOutService, type FirebaseUser } from '@/lib/firebase/authService';
@@ -59,7 +60,14 @@ export function SidebarNav() {
     <Sidebar variant="sidebar" side="left" collapsible="icon">
       <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
-          <Dumbbell className="h-8 w-8 text-primary" />
+          <Image 
+            src="/logo-placeholder.png" 
+            alt={`${APP_NAME} logo`} 
+            width={32} 
+            height={32} 
+            className="text-primary"
+            data-ai-hint="app logo"
+          />
           <span className="font-headline text-2xl font-bold text-primary group-data-[collapsible=icon]:hidden">
             {APP_NAME}
           </span>
