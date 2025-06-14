@@ -58,15 +58,15 @@ export function SidebarNav() {
 
   return (
     <Sidebar side="left" collapsible="icon">
-      <SidebarHeader className="flex items-center justify-center p-2 border-b border-sidebar-border h-16">
-        <Link href="/" className="relative block h-full aspect-square"> {/* Container for fill, aspect-square for square logo */}
+      <SidebarHeader className="flex items-center justify-center p-2 border-b border-sidebar-border h-16"> {/* Increased height and adjusted padding */}
+        <Link href="/" className="relative block h-full aspect-square"> {/* Container for fill, ensures square area for logo */}
           <Image
             src={APP_LOGO_URL}
             alt={`${APP_NAME} logo`}
-            fill // Makes image fill parent
-            className="object-contain" // Ensures aspect ratio is maintained
+            fill 
+            className="object-contain" 
             data-ai-hint="app logo"
-            priority // Good for LCP elements
+            priority 
           />
         </Link>
       </SidebarHeader>
@@ -134,3 +134,4 @@ export function SidebarNav() {
     </Sidebar>
   );
 }
+

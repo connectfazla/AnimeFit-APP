@@ -13,7 +13,7 @@ import { LevelIndicator } from '@/components/features/animefit/LevelIndicator';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { DEFAULT_USER_PROFILE, DEFAULT_USER_PROFILE_ID, CHARACTERS } from '@/lib/constants';
 import type { UserProfile, AnimeCharacter, DailyLog } from '@/lib/types';
-import { ArrowRight, BarChartBig, Users, CalendarPlus } from 'lucide-react';
+import { ArrowRight, BarChartBig, Users, CalendarPlus, Dumbbell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
-    setIsClient(true); // Set client flag on mount
+    setIsClient(true); 
     const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
         setCurrentUser(user);
@@ -37,34 +37,32 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // Initialize profile if it doesn't exist and client has mounted and auth state is resolved
   useEffect(() => {
-    if (isClient && !authLoading) { // Ensure auth state is resolved before profile logic
+    if (isClient && !authLoading) { 
       if (currentUser) {
-        // User is authenticated, ensure their profile is active
         const userSpecificProfileKey = `userProfile-${currentUser.uid}`;
         const storedUserProfile = localStorage.getItem(userSpecificProfileKey);
         if (storedUserProfile) {
           const loadedProfile = JSON.parse(storedUserProfile);
-          // Check if the active profile ID matches, otherwise update it
-          if (userProfile?.id !== currentUser.uid) {
-            setUserProfile(loadedProfile);
-          } else if (!userProfile) { // If active profile is null, set it
+          if (userProfile?.id !== currentUser.uid || !userProfile) {
             setUserProfile(loadedProfile);
           }
         } else {
-          // No specific profile found, create and set a default one for this user
           const defaultProfileForUser: UserProfile = {
               ...DEFAULT_USER_PROFILE,
               id: currentUser.uid,
               name: currentUser.displayName || DEFAULT_USER_PROFILE.name,
+              customProfileImageUrl: currentUser.photoURL || DEFAULT_USER_PROFILE.customProfileImageUrl,
           };
           setUserProfile(defaultProfileForUser);
           localStorage.setItem(userSpecificProfileKey, JSON.stringify(defaultProfileForUser));
+          // Also update the generic key if this is the first setup for this user
+          localStorage.setItem(DEFAULT_USER_PROFILE_ID, JSON.stringify(defaultProfileForUser));
         }
       } else if (!currentUser && !userProfile) { 
-        // No authenticated user and no active profile, set default (should be rare due to redirect)
+         // No authenticated user and no active profile, set default (should be rare due to redirect)
         setUserProfile(DEFAULT_USER_PROFILE);
+        localStorage.setItem(DEFAULT_USER_PROFILE_ID, JSON.stringify(DEFAULT_USER_PROFILE));
       }
     }
   }, [isClient, authLoading, currentUser, userProfile, setUserProfile]);
@@ -101,7 +99,6 @@ export default function DashboardPage() {
     );
   }
   
-  // After auth check, if userProfile is still null, it means something is wrong or still loading
   if (!userProfile) {
     return (
       <AppLayout pageTitle="Dashboard">
@@ -158,10 +155,10 @@ export default function DashboardPage() {
         </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
-            <LevelIndicator userProfile={userProfile} />
+            {/* "Today's Quest" card is now first */}
             <Card className="shadow-lg bg-card/80 backdrop-blur-sm">
                 <CardHeader>
-                    <CardTitle className="font-headline text-xl text-primary flex items-center"><CalendarPlus className="mr-2 h-6 w-6"/>Today's Quest</CardTitle>
+                    <CardTitle className="font-headline text-xl text-primary flex items-center"><Dumbbell className="mr-2 h-6 w-6"/>Today's Quest</CardTitle>
                     <CardDescription className="text-muted-foreground">Jump into your daily training regime.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -172,6 +169,8 @@ export default function DashboardPage() {
                     </Link>
                 </CardContent>
             </Card>
+            {/* LevelIndicator card is now second */}
+            <LevelIndicator userProfile={userProfile} />
         </div>
 
         <ProgressChartClient dailyLogs={dailyLogs} />

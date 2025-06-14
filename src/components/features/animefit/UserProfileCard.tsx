@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { UserProfile, AnimeCharacter } from '@/lib/types';
-import { CHARACTERS } from '@/lib/constants';
+import { CHARACTERS, APP_LOGO_URL } from '@/lib/constants';
 import { Edit3, User, BarChart3, ShieldCheck } from 'lucide-react';
 
 interface UserProfileCardProps {
@@ -25,10 +25,22 @@ export function UserProfileCard({ userProfile }: UserProfileCardProps) {
     (char) => char.id === userProfile.selectedCharacterId
   );
 
+  // Prioritize customProfileImageUrl (which could be a Data URI or external URL)
+  // Then selected character's image, then a default placeholder/icon.
   const displayImageUrl = userProfile.customProfileImageUrl || selectedCharacter?.imageUrl;
   const displayName = userProfile.name;
-  const displayAlt = userProfile.customProfileImageUrl ? `${displayName}'s custom profile picture` : selectedCharacter?.name || displayName;
-  const displayDataAiHint = userProfile.customProfileImageUrl ? "user profile" : selectedCharacter?.dataAiHint;
+  
+  let imageAlt = displayName;
+  if (userProfile.customProfileImageUrl) {
+    imageAlt = `${displayName}'s custom profile picture`;
+  } else if (selectedCharacter) {
+    imageAlt = selectedCharacter.name;
+  }
+
+  let imageDataAiHint = "user avatar";
+  if (!userProfile.customProfileImageUrl && selectedCharacter) {
+    imageDataAiHint = selectedCharacter.dataAiHint;
+  }
 
 
   return (
@@ -36,18 +48,20 @@ export function UserProfileCard({ userProfile }: UserProfileCardProps) {
       <CardHeader className="text-center items-center">
         {displayImageUrl ? (
           <Image
-            // It's important that any user-provided URL for customProfileImageUrl
-            // is from a hostname whitelisted in next.config.js
-            // Or, consider using a standard img tag if hostnames are too variable,
-            // but you'd lose next/image optimizations.
-            src={displayImageUrl}
-            alt={displayAlt}
+            src={displayImageUrl} // Can be Data URI or external URL
+            alt={imageAlt}
             width={128}
             height={128}
             className="rounded-full object-cover border-4 border-primary shadow-lg mx-auto"
-            data-ai-hint={displayDataAiHint || "character avatar"}
-            // Add error handling for external images if necessary
-            // onError={(e) => { e.currentTarget.src = '/default-avatar.png'; }} // Example fallback
+            data-ai-hint={imageDataAiHint}
+            // For Data URIs, onError might not be as relevant unless the Data URI itself is broken.
+            // For external URLs, good to have error handling.
+             onError={(e) => { 
+              // Attempt to set to default app logo on error
+              // This is a basic fallback. More robust would be a specific default user avatar.
+              (e.target as HTMLImageElement).src = APP_LOGO_URL; 
+              (e.target as HTMLImageElement).dataset.aiHint = "app logo fallback";
+            }}
           />
         ) : (
           <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center mx-auto border-4 border-primary shadow-lg">
@@ -85,3 +99,4 @@ export function UserProfileCard({ userProfile }: UserProfileCardProps) {
     </Card>
   );
 }
+
