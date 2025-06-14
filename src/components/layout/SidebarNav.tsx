@@ -58,16 +58,16 @@ export function SidebarNav() {
 
   return (
     <Sidebar side="left" collapsible="icon">
-      <SidebarHeader className="flex items-center justify-center p-4 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center"> {/* Removed gap-2 as text is gone */}
+      <SidebarHeader className="flex items-center justify-center p-2 border-b border-sidebar-border h-16">
+        <Link href="/" className="relative block h-full aspect-square"> {/* Container for fill, aspect-square for square logo */}
           <Image
             src={APP_LOGO_URL}
             alt={`${APP_NAME} logo`}
-            width={32} 
-            height={32}
+            fill // Makes image fill parent
+            className="object-contain" // Ensures aspect ratio is maintained
             data-ai-hint="app logo"
+            priority // Good for LCP elements
           />
-          {/* The APP_NAME span has been removed */}
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
