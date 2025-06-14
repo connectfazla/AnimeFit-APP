@@ -80,7 +80,7 @@ export default function SignupPage() {
         description: 'Welcome, hero!',
       });
       router.push('/'); 
-    } catch (error: any) G
+    } catch (error: any) {
       toast({
         title: 'Google Sign-Up Failed',
         description: error.message || 'Could not sign up with Google.',
