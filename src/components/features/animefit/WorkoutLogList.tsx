@@ -1,8 +1,8 @@
 
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Exercise, DailyLog, UserProfile } from '@/lib/types';
-import { WORKOUTS, MAIN_WORKOUT_ID, XP_PER_EXERCISE, XP_PER_WORKOUT_COMPLETION_BONUS, DEFAULT_USER_PROFILE_ID, DEFAULT_USER_PROFILE, getXpToNextLevel, CHARACTERS } from '@/lib/constants';
+import { WORKOUTS, MAIN_WORKOUT_ID, XP_PER_EXERCISE, XP_PER_WORKOUT_COMPLETION_BONUS, DEFAULT_USER_PROFILE_ID, getXpToNextLevel, CHARACTERS } from '@/lib/constants';
 import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
@@ -22,7 +22,6 @@ export function WorkoutLogList() {
   const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
   const [isClient, setIsClient] = useState(false);
   
-  // Define a stable initial state for currentLog, or use a function for useState
   const getInitialLogState = useCallback(() => ({ date: today, completedExerciseIds: [], workoutCompleted: false }), [today]);
   const [currentLog, setCurrentLog] = useState<DailyLog>(getInitialLogState);
   
@@ -38,8 +37,6 @@ export function WorkoutLogList() {
 
   useEffect(() => {
     if (isClient) {
-      // currentLog should be updated when isClient, today, or dailyLogs change.
-      // userProfile is used for enabling actions and display, but not for defining the structure of currentLog for today.
       setCurrentLog(dailyLogs[today] || getInitialLogState());
     }
   }, [isClient, today, dailyLogs, getInitialLogState]);
@@ -137,11 +134,11 @@ export function WorkoutLogList() {
       level: newLevel,
       rewards: levelledUp ? [...userProfile.rewards, `Level ${newLevel} Achieved Aura`] : userProfile.rewards,
     };
-    setUserProfile(updatedProfile); // This updates the profile in localStorage via useLocalStorageState
+    setUserProfile(updatedProfile); 
 
     const finalLog = { ...currentLog, workoutCompleted: true };
-    setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog })); // This updates dailyLogs in localStorage
-    setCurrentLog(finalLog); // Update local component state for currentLog
+    setDailyLogs(prevLogs => ({ ...prevLogs, [today]: finalLog })); 
+    setCurrentLog(finalLog); 
 
     setModalData({ xpEarned, levelledUp, newLevel: levelledUp ? newLevel : undefined });
     setShowCompletionModal(true);
@@ -204,7 +201,7 @@ export function WorkoutLogList() {
         <CardFooter>
           <Button 
             onClick={handleFinishWorkout} 
-            disabled={currentLog.workoutCompleted || currentLog.completedExerciseIds.length === 0 || !userProfile} 
+            disabled={!userProfile || currentLog.workoutCompleted || currentLog.completedExerciseIds.length === 0} 
             size="lg" 
             className="w-full font-headline text-lg"
           >
