@@ -6,6 +6,7 @@ export interface AnimeCharacter {
   dataAiHint: string;
   description: string;
   powerLevel: number;
+  themedExercises?: Exercise[]; // Added for character-specific workouts
 }
 
 export type DifficultyLevel = 'easy' | 'normal' | 'hard';
@@ -14,13 +15,13 @@ export interface IntensityConfig {
   reps?: number;
   sets?: number;
   duration?: string;
-  descriptionSuffix?: string; 
+  descriptionSuffix?: string;
 }
 
 export interface Exercise {
   id: string;
   name: string;
-  description: string; 
+  description: string;
   videoTutorialUrl?: string;
   intensity: {
     easy: IntensityConfig;
@@ -54,7 +55,7 @@ export interface DailyLog {
   date: string; // YYYY-MM-DD
   completedExerciseIds: string[];
   workoutCompleted: boolean;
-  difficulty?: DifficultyLevel; 
-  duration?: string; 
+  difficulty?: DifficultyLevel;
+  duration?: string;
   extraQuestCompleted?: boolean;
 }

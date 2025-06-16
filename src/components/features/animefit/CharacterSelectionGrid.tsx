@@ -1,18 +1,21 @@
 
 "use client";
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react';
 import { CharacterCard } from './CharacterCard';
-import { CHARACTERS, DEFAULT_USER_PROFILE_ID, DEFAULT_USER_PROFILE } from '@/lib/constants';
+import { CHARACTERS } from '@/lib/constants';
 import type { UserProfile } from '@/lib/types';
-import useLocalStorageState from '@/hooks/use-local-storage-state';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function CharacterSelectionGrid() {
-  const [userProfile, setUserProfile] = useLocalStorageState<UserProfile | null>(`userProfile-${DEFAULT_USER_PROFILE_ID}`, null);
+interface CharacterSelectionGridProps {
+  userProfile: UserProfile | null;
+  setUserProfile: Dispatch<SetStateAction<UserProfile | null>>;
+}
+
+export function CharacterSelectionGrid({ userProfile, setUserProfile }: CharacterSelectionGridProps) {
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
@@ -49,6 +52,7 @@ export function CharacterSelectionGrid() {
   };
 
   if (!isClient || !userProfile) {
+    // This loading state should ideally be brief as CharacterSelectionPage handles the main loading.
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -76,7 +80,7 @@ export function CharacterSelectionGrid() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {CHARACTERS.map((character) => (
           <CharacterCard
             key={character.id}
@@ -87,9 +91,9 @@ export function CharacterSelectionGrid() {
         ))}
       </div>
       <div className="flex justify-center pb-4">
-        <Button 
-          onClick={handleConfirmSelection} 
-          size="lg" 
+        <Button
+          onClick={handleConfirmSelection}
+          size="lg"
           className="font-headline"
           disabled={!selectedCharacterId}
         >
