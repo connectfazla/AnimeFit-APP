@@ -1,4 +1,4 @@
-# AnimeFit - Level Up Your Fitness!
+# AnimeFit - Level Up Your Fitness! BY FAZLA RABBI
 
 AnimeFit is a gamified fitness tracking application designed to motivate users by allowing them to train alongside their favorite anime heroes. Track your workouts, select character mentors, unlock achievements, and watch your fitness level grow!
 
